@@ -619,10 +619,10 @@ export default function SyncToGarmin() {
         />
         <List.Item
           title="Sync All Recent Measurements"
-          subtitle="Sync the last 7 measurements"
+          subtitle="Sync the 7 most recent days with data"
           icon={Icon.Upload}
           accessories={[
-            { tag: { value: `${Math.min(measurements.length, 7)} items` } },
+            { tag: { value: `${Math.min(measurements.length, 7)} days` } },
           ]}
           actions={
             <ActionPanel>
@@ -657,7 +657,7 @@ export default function SyncToGarmin() {
               ? [
                   {
                     tag: {
-                      value: `${Object.keys(garminWeightData).length} found`,
+                      value: `${Object.keys(garminWeightData).length} days in Garmin`,
                       color: Color.Green,
                     },
                   },
