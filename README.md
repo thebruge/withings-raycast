@@ -4,9 +4,11 @@ Sync your Withings health data (weight, blood pressure, body composition) to Gar
 
 ## Features
 
-- 📊 **View Measurements**: View your recent Withings measurements including weight, body fat, and blood pressure
+- 📊 **View Measurements**: View your recent Withings measurements including weight (in lbs), body fat, blood pressure, and heart rate
 - ⬆️ **Sync to Garmin**: Upload your Withings data to Garmin Connect with one click
-- 🔐 **Secure Authentication**: OAuth-based authentication with automatic token refresh
+- 📅 **Sync Today's Data**: Quick action to sync all measurements from today
+- 🏋️ **Complete Body Composition**: Syncs weight, body fat, bone mass, and skeletal muscle mass
+- 🔐 **Secure Authentication**: OAuth-based authentication with automatic token refresh for Withings, session-based auth for Garmin
 - 🩺 **Blood Pressure Support**: Optionally include blood pressure readings in your sync
 - ⚡ **Fast & Lightweight**: Built with TypeScript and React for optimal performance
 
@@ -35,17 +37,20 @@ Install the extension from the Raycast Store or build it locally.
 ### View Withings Measurements
 
 Browse your recent health measurements from Withings including:
-- Weight
+- Weight (displayed in lbs)
 - Body fat percentage
 - Blood pressure (systolic/diastolic)
 - Heart rate
+- Bone mass
+- Skeletal muscle mass
 
 ### Sync to Garmin
 
 Upload your Withings measurements to Garmin Connect:
-- Sync individual measurements
-- Batch sync recent measurements
-- Includes weight and optionally blood pressure
+- **Sync Today's Data**: Upload all measurements from today in one action
+- **Sync All Recent**: Batch sync the last 7 measurements
+- **Individual Sync**: Sync specific measurements one at a time
+- Includes weight, body fat, bone mass, muscle mass, and optionally blood pressure
 
 ### Configure Withings & Garmin
 
