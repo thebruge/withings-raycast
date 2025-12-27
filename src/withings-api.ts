@@ -18,7 +18,8 @@ interface Preferences {
 const preferences = getPreferenceValues<Preferences>();
 const WITHINGS_CLIENT_ID = preferences.withingsClientId;
 const WITHINGS_CLIENT_SECRET = preferences.withingsClientSecret;
-const WITHINGS_REDIRECT_URI = "https://raycast.com/redirect?packageName=Extension";
+const WITHINGS_REDIRECT_URI =
+  "https://raycast.com/redirect?packageName=Extension";
 
 export const withingsOAuthClient = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,
@@ -91,7 +92,8 @@ export async function authorize(): Promise<void> {
     },
   });
 
-  const { authorizationCode } = await withingsOAuthClient.authorize(authRequest);
+  const { authorizationCode } =
+    await withingsOAuthClient.authorize(authRequest);
 
   const tokens = await fetchTokens(authorizationCode);
   await storeTokens(tokens);
@@ -201,7 +203,7 @@ export async function getValidTokens(): Promise<WithingsTokens | null> {
 
 export async function getMeasurements(
   fromDate?: Date,
-  toDate?: Date
+  toDate?: Date,
 ): Promise<WithingsMeasurement[]> {
   const tokens = await getValidTokens();
   if (!tokens) {
@@ -218,7 +220,9 @@ export async function getMeasurements(
     enddate: Math.floor(endDate.getTime() / 1000).toString(),
   });
 
-  const response = await fetch(`https://wbsapi.withings.net/measure?${params.toString()}`);
+  const response = await fetch(
+    `https://wbsapi.withings.net/measure?${params.toString()}`,
+  );
   const data = (await response.json()) as WithingsAPIResponse;
 
   if (data.status !== 0) {
@@ -274,7 +278,9 @@ export async function getMeasurements(
     }
   }
 
-  return Array.from(measurementsByDate.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+  return Array.from(measurementsByDate.values()).sort(
+    (a, b) => b.date.getTime() - a.date.getTime(),
+  );
 }
 
 export async function isAuthenticated(): Promise<boolean> {

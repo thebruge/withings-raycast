@@ -10,7 +10,12 @@ import {
   Detail,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
-import { getMeasurements, isAuthenticated, authorize, WithingsMeasurement } from "./withings-api";
+import {
+  getMeasurements,
+  isAuthenticated,
+  authorize,
+  WithingsMeasurement,
+} from "./withings-api";
 import { GarminAPI, createFitFile, FitFileData } from "./garmin-api";
 
 interface Preferences {
@@ -103,7 +108,8 @@ export default function SyncToGarmin() {
       await showToast({
         style: Toast.Style.Failure,
         title: "Garmin credentials missing",
-        message: "Please configure your Garmin username and password in preferences",
+        message:
+          "Please configure your Garmin username and password in preferences",
       });
       return;
     }
@@ -125,7 +131,11 @@ export default function SyncToGarmin() {
         muscleMass: measurement.muscleMass,
       };
 
-      if (prefs.includeBloodPressure && measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
+      if (
+        prefs.includeBloodPressure &&
+        measurement.systolicBloodPressure &&
+        measurement.diastolicBloodPressure
+      ) {
         fitData.systolicBP = measurement.systolicBloodPressure;
         fitData.diastolicBP = measurement.diastolicBloodPressure;
         fitData.heartRate = measurement.heartPulse;
@@ -174,7 +184,8 @@ export default function SyncToGarmin() {
       await showToast({
         style: Toast.Style.Failure,
         title: "Garmin credentials missing",
-        message: "Please configure your Garmin username and password in preferences",
+        message:
+          "Please configure your Garmin username and password in preferences",
       });
       return;
     }
@@ -199,7 +210,8 @@ export default function SyncToGarmin() {
       await showToast({
         style: Toast.Style.Failure,
         title: "Garmin credentials missing",
-        message: "Please configure your Garmin username and password in preferences",
+        message:
+          "Please configure your Garmin username and password in preferences",
       });
       return;
     }
@@ -252,7 +264,11 @@ export default function SyncToGarmin() {
           description="You need to authorize Raycast to access your Withings data"
           actions={
             <ActionPanel>
-              <Action title="Authorize Withings" onAction={handleAuthorize} icon={Icon.Key} />
+              <Action
+                title="Authorize Withings"
+                onAction={handleAuthorize}
+                icon={Icon.Key}
+              />
             </ActionPanel>
           }
         />
@@ -286,13 +302,22 @@ export default function SyncToGarmin() {
   });
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Select measurement to sync...">
+    <List
+      isLoading={isLoading}
+      searchBarPlaceholder="Select measurement to sync..."
+    >
       <List.Section title="Actions">
         <List.Item
           title="Sync Today's Data"
           subtitle="Sync all measurements from today (weight + blood pressure)"
           icon={Icon.Calendar}
-          accessories={[{ tag: { value: `${todaysMeasurements.length} item${todaysMeasurements.length !== 1 ? 's' : ''}` } }]}
+          accessories={[
+            {
+              tag: {
+                value: `${todaysMeasurements.length} item${todaysMeasurements.length !== 1 ? "s" : ""}`,
+              },
+            },
+          ]}
           actions={
             <ActionPanel>
               <Action
@@ -307,7 +332,9 @@ export default function SyncToGarmin() {
           title="Sync All Recent Measurements"
           subtitle="Sync the last 7 measurements to Garmin"
           icon={Icon.Upload}
-          accessories={[{ tag: { value: `${Math.min(measurements.length, 7)} items` } }]}
+          accessories={[
+            { tag: { value: `${Math.min(measurements.length, 7)} items` } },
+          ]}
           actions={
             <ActionPanel>
               <Action
@@ -326,7 +353,9 @@ export default function SyncToGarmin() {
             key={index}
             measurement={measurement}
             onSync={() => syncMeasurement(measurement)}
-            syncResult={syncResults.find((r) => r.measurementDate === measurement.date)}
+            syncResult={syncResults.find(
+              (r) => r.measurementDate === measurement.date,
+            )}
           />
         ))}
       </List.Section>
@@ -340,7 +369,11 @@ interface MeasurementItemProps {
   syncResult?: SyncResult;
 }
 
-function MeasurementItem({ measurement, onSync, syncResult }: MeasurementItemProps) {
+function MeasurementItem({
+  measurement,
+  onSync,
+  syncResult,
+}: MeasurementItemProps) {
   const formattedDate = measurement.date.toLocaleDateString("en-US", {
     weekday: "short",
     year: "numeric",

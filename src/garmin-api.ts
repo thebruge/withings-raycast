@@ -26,7 +26,9 @@ export class GarminAPI {
     const prefs = getPreferenceValues<Preferences>();
 
     if (!prefs.garminUsername || !prefs.garminPassword) {
-      throw new Error("Garmin username and password are required. Please configure them in preferences.");
+      throw new Error(
+        "Garmin username and password are required. Please configure them in preferences.",
+      );
     }
 
     // Update credentials
@@ -84,7 +86,10 @@ export class GarminAPI {
       // The uploadActivity method expects a file path (string), not a Buffer
       // We need to write the buffer to a temporary file first
       const tempDir = os.tmpdir();
-      const tempFilePath = path.join(tempDir, `withings-sync-${Date.now()}.fit`);
+      const tempFilePath = path.join(
+        tempDir,
+        `withings-sync-${Date.now()}.fit`,
+      );
 
       await fs.writeFile(tempFilePath, fitData as unknown as Uint8Array);
 
@@ -104,7 +109,9 @@ export class GarminAPI {
         throw uploadError;
       }
     } catch (error) {
-      throw new Error(`Failed to upload to Garmin: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(
+        `Failed to upload to Garmin: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 }
@@ -126,7 +133,9 @@ export function createFitFile(data: FitFileData): Buffer {
   const writer = new FitWriter();
 
   // Convert timestamp to FIT format (seconds since UTC 00:00 Dec 31 1989)
-  const fitTimestamp = Math.floor((data.timestamp.getTime() - 631065600000) / 1000);
+  const fitTimestamp = Math.floor(
+    (data.timestamp.getTime() - 631065600000) / 1000,
+  );
 
   // File ID message - required for all FIT files
   writer.writeMessage("file_id", {

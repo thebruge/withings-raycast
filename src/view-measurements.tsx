@@ -1,6 +1,19 @@
-import { List, ActionPanel, Action, Icon, Color, showToast, Toast } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Color,
+  showToast,
+  Toast,
+} from "@raycast/api";
 import { useEffect, useState } from "react";
-import { getMeasurements, isAuthenticated, WithingsMeasurement, authorize } from "./withings-api";
+import {
+  getMeasurements,
+  isAuthenticated,
+  WithingsMeasurement,
+  authorize,
+} from "./withings-api";
 
 export default function ViewMeasurements() {
   const [measurements, setMeasurements] = useState<WithingsMeasurement[]>([]);
@@ -82,7 +95,11 @@ export default function ViewMeasurements() {
           description="You need to authorize Raycast to access your Withings data"
           actions={
             <ActionPanel>
-              <Action title="Authorize Withings" onAction={handleAuthorize} icon={Icon.Key} />
+              <Action
+                title="Authorize Withings"
+                onAction={handleAuthorize}
+                icon={Icon.Key}
+              />
             </ActionPanel>
           }
         />
@@ -99,7 +116,11 @@ export default function ViewMeasurements() {
           description="No measurements found in the last 7 days"
           actions={
             <ActionPanel>
-              <Action title="Refresh" onAction={loadMeasurements} icon={Icon.ArrowClockwise} />
+              <Action
+                title="Refresh"
+                onAction={loadMeasurements}
+                icon={Icon.ArrowClockwise}
+              />
             </ActionPanel>
           }
         />
@@ -187,7 +208,11 @@ function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
       accessories={accessories}
       actions={
         <ActionPanel>
-          <Action title="Refresh" onAction={onRefresh} icon={Icon.ArrowClockwise} />
+          <Action
+            title="Refresh"
+            onAction={onRefresh}
+            icon={Icon.ArrowClockwise}
+          />
           <Action.CopyToClipboard
             title="Copy Details"
             content={JSON.stringify(measurement, null, 2)}
@@ -208,7 +233,9 @@ function buildSubtitle(measurement: WithingsMeasurement): string {
   }
 
   if (measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
-    parts.push(`BP: ${measurement.systolicBloodPressure.toFixed(0)}/${measurement.diastolicBloodPressure.toFixed(0)}`);
+    parts.push(
+      `BP: ${measurement.systolicBloodPressure.toFixed(0)}/${measurement.diastolicBloodPressure.toFixed(0)}`,
+    );
   }
 
   return parts.join(" • ");

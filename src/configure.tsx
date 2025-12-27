@@ -91,7 +91,9 @@ export default function Configure() {
     prefs.garminUsername && prefs.garminPassword
       ? "✅ Credentials Configured"
       : "❌ Not Configured";
-  const bloodPressureStatus = prefs.includeBloodPressure ? "✅ Enabled" : "❌ Disabled";
+  const bloodPressureStatus = prefs.includeBloodPressure
+    ? "✅ Enabled"
+    : "❌ Disabled";
 
   const markdown = `
 # Withings Sync Configuration
