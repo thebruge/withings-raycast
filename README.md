@@ -14,18 +14,42 @@ Sync your Withings health data (weight, blood pressure, body composition) to Gar
 
 ## Setup
 
-### 1. Install the Extension
+### 1. Register Withings OAuth App
 
-Install the extension from the Raycast Store or build it locally.
+**REQUIRED**: You must register your own Withings OAuth application:
 
-### 2. Configure Withings
+1. Go to https://developer.withings.com/ and create an account
+2. Create a new OAuth 2.0 application
+3. Set the **Redirect URI** to: `https://raycast.com/redirect?packageName=Extension`
+4. Copy your Client ID and Client Secret
 
-1. Run the "Configure Withings & Garmin" command
+### 2. Configure Environment Variables
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` and add your Withings credentials:
+   ```
+   WITHINGS_CLIENT_ID=your_client_id_here
+   WITHINGS_CLIENT_SECRET=your_client_secret_here
+   ```
+
+### 3. Install Dependencies and Build
+
+```bash
+npm install
+npm run build
+```
+
+### 4. Configure Withings in Raycast
+
+1. Open Raycast and search for "Configure Withings & Garmin"
 2. Click "Authorize Withings"
 3. Sign in to your Withings account in the browser
 4. Grant permissions to Raycast
 
-### 3. Configure Garmin (Optional)
+### 5. Configure Garmin
 
 1. Press `⌘ + ,` to open extension preferences
 2. Enter your Garmin Connect username (email)

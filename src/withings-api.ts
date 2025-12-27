@@ -1,12 +1,28 @@
-import { OAuth, LocalStorage } from "@raycast/api";
+import { OAuth, LocalStorage, environment } from "@raycast/api";
 import fetch from "node-fetch";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
+
+// Load .env file from extension directory
+const envPath = path.join(environment.assetsPath, "..", ".env");
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 // Withings OAuth Configuration
 // Registered at: https://developer.withings.com/dashboard/
 // Redirect URI: https://raycast.com/redirect?packageName=Extension
-const WITHINGS_CLIENT_ID = "c021a4a204f59c5723a19b261cc9afbde58b8bf5d080bdcfcdc336161842ed5d";
-const WITHINGS_CLIENT_SECRET = "41d1197696866d9b8cbce1bc510690f29a5915856b9634437c071322e8806b6c";
+//
+// IMPORTANT: Users must register their own Withings OAuth app and set these values
+// See README.md for setup instructions
+const WITHINGS_CLIENT_ID = process.env.WITHINGS_CLIENT_ID || "";
+const WITHINGS_CLIENT_SECRET = process.env.WITHINGS_CLIENT_SECRET || "";
 const WITHINGS_REDIRECT_URI = "https://raycast.com/redirect?packageName=Extension";
+
+if (!WITHINGS_CLIENT_ID || !WITHINGS_CLIENT_SECRET) {
+  console.error("Withings OAuth credentials not configured. Please set up your .env file.");
+}
 
 export const withingsOAuthClient = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,
