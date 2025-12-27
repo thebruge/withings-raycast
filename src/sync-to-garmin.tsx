@@ -121,6 +121,8 @@ export default function SyncToGarmin() {
         timestamp: measurement.date,
         weight: measurement.weight,
         bodyFat: measurement.fatRatio,
+        boneMass: measurement.boneMass,
+        muscleMass: measurement.muscleMass,
       };
 
       if (prefs.includeBloodPressure && measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
@@ -178,7 +180,7 @@ export default function SyncToGarmin() {
     }
 
     const recentMeasurements = measurements.slice(0, 7); // Last 7 measurements
-    
+
     for (const measurement of recentMeasurements) {
       await syncMeasurement(measurement);
       // Add small delay between syncs
@@ -189,6 +191,55 @@ export default function SyncToGarmin() {
       style: Toast.Style.Success,
       title: "Batch sync complete!",
       message: `Synced ${recentMeasurements.length} measurements`,
+    });
+  }
+
+  async function syncToday() {
+    if (!prefs.garminUsername || !prefs.garminPassword) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Garmin credentials missing",
+        message: "Please configure your Garmin username and password in preferences",
+      });
+      return;
+    }
+
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filter measurements from today
+    const todaysMeasurements = measurements.filter((m) => {
+      const measurementDate = new Date(m.date);
+      measurementDate.setHours(0, 0, 0, 0);
+      return measurementDate.getTime() === today.getTime();
+    });
+
+    if (todaysMeasurements.length === 0) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "No measurements found",
+        message: "No measurements from today to sync",
+      });
+      return;
+    }
+
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Syncing today's data...",
+      message: `${todaysMeasurements.length} measurement(s)`,
+    });
+
+    for (const measurement of todaysMeasurements) {
+      await syncMeasurement(measurement);
+      // Add small delay between syncs
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Today's data synced!",
+      message: `Synced ${todaysMeasurements.length} measurement(s)`,
     });
   }
 
@@ -225,9 +276,33 @@ export default function SyncToGarmin() {
     );
   }
 
+  // Count today's measurements
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todaysMeasurements = measurements.filter((m) => {
+    const measurementDate = new Date(m.date);
+    measurementDate.setHours(0, 0, 0, 0);
+    return measurementDate.getTime() === today.getTime();
+  });
+
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Select measurement to sync...">
       <List.Section title="Actions">
+        <List.Item
+          title="Sync Today's Data"
+          subtitle="Sync all measurements from today (weight + blood pressure)"
+          icon={Icon.Calendar}
+          accessories={[{ tag: { value: `${todaysMeasurements.length} item${todaysMeasurements.length !== 1 ? 's' : ''}` } }]}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Sync Today"
+                onAction={syncToday}
+                icon={Icon.Calendar}
+              />
+            </ActionPanel>
+          }
+        />
         <List.Item
           title="Sync All Recent Measurements"
           subtitle="Sync the last 7 measurements to Garmin"
