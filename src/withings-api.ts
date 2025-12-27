@@ -1,28 +1,24 @@
-import { OAuth, LocalStorage, environment } from "@raycast/api";
+import { OAuth, LocalStorage, getPreferenceValues } from "@raycast/api";
 import fetch from "node-fetch";
-import * as dotenv from "dotenv";
-import * as path from "path";
-import * as fs from "fs";
 
-// Load .env file from extension directory
-const envPath = path.join(environment.assetsPath, "..", ".env");
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath });
+interface Preferences {
+  withingsClientId: string;
+  withingsClientSecret: string;
+  garminUsername?: string;
+  garminPassword?: string;
+  includeBloodPressure?: boolean;
 }
 
 // Withings OAuth Configuration
 // Registered at: https://developer.withings.com/dashboard/
 // Redirect URI: https://raycast.com/redirect?packageName=Extension
 //
-// IMPORTANT: Users must register their own Withings OAuth app and set these values
+// IMPORTANT: Users must register their own Withings OAuth app and configure in preferences
 // See README.md for setup instructions
-const WITHINGS_CLIENT_ID = process.env.WITHINGS_CLIENT_ID || "";
-const WITHINGS_CLIENT_SECRET = process.env.WITHINGS_CLIENT_SECRET || "";
+const preferences = getPreferenceValues<Preferences>();
+const WITHINGS_CLIENT_ID = preferences.withingsClientId;
+const WITHINGS_CLIENT_SECRET = preferences.withingsClientSecret;
 const WITHINGS_REDIRECT_URI = "https://raycast.com/redirect?packageName=Extension";
-
-if (!WITHINGS_CLIENT_ID || !WITHINGS_CLIENT_SECRET) {
-  console.error("Withings OAuth credentials not configured. Please set up your .env file.");
-}
 
 export const withingsOAuthClient = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,

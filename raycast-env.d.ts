@@ -8,6 +8,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
+  /** Withings Client ID - Your Withings OAuth Client ID from https://developer.withings.com/ */
+  "withingsClientId": string,
+  /** Withings Client Secret - Your Withings OAuth Client Secret */
+  "withingsClientSecret": string,
   /** Garmin Username - Your Garmin Connect username/email */
   "garminUsername"?: string,
   /** Garmin Password - Your Garmin Connect password */

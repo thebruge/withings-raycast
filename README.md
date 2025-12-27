@@ -23,38 +23,30 @@ Sync your Withings health data (weight, blood pressure, body composition) to Gar
 3. Set the **Redirect URI** to: `https://raycast.com/redirect?packageName=Extension`
 4. Copy your Client ID and Client Secret
 
-### 2. Configure Environment Variables
-
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Edit `.env` and add your Withings credentials:
-   ```
-   WITHINGS_CLIENT_ID=your_client_id_here
-   WITHINGS_CLIENT_SECRET=your_client_secret_here
-   ```
-
-### 3. Install Dependencies and Build
+### 2. Install and Build
 
 ```bash
 npm install
 npm run build
 ```
 
-### 4. Configure Withings in Raycast
+### 3. Configure in Raycast Preferences
+
+1. Open Raycast and press `⌘ + ,` (Command + Comma)
+2. Find "Withings Sync" in the extensions list
+3. Configure your credentials:
+   - **Withings Client ID**: Your OAuth Client ID from step 1
+   - **Withings Client Secret**: Your OAuth Client Secret from step 1
+   - **Garmin Username**: Your Garmin Connect email
+   - **Garmin Password**: Your Garmin Connect password
+   - **Include Blood Pressure**: Enable/disable blood pressure sync
+
+### 4. Authorize Withings
 
 1. Open Raycast and search for "Configure Withings & Garmin"
 2. Click "Authorize Withings"
 3. Sign in to your Withings account in the browser
 4. Grant permissions to Raycast
-
-### 5. Configure Garmin
-
-1. Press `⌘ + ,` to open extension preferences
-2. Enter your Garmin Connect username (email)
-3. Enter your Garmin Connect password
-4. Enable/disable blood pressure sync
 
 ## Commands
 
@@ -82,6 +74,10 @@ Manage your account connections and view configuration status.
 
 ## Preferences
 
+All credentials are configured in Raycast preferences (`⌘ + ,`):
+
+- **Withings Client ID**: Your Withings OAuth Client ID from https://developer.withings.com/
+- **Withings Client Secret**: Your Withings OAuth Client Secret
 - **Garmin Username**: Your Garmin Connect email address
 - **Garmin Password**: Your Garmin Connect password
 - **Include Blood Pressure**: Whether to sync blood pressure measurements
