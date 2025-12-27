@@ -164,7 +164,8 @@ function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
 
   // Display weight in user's preferred unit
   if (measurement.weight) {
-    const weight = weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
+    const weight =
+      weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
     const unit = weightUnit === "kg" ? "kg" : "lb";
     accessories.push({
       tag: {
@@ -239,7 +240,8 @@ function buildSubtitle(measurement: WithingsMeasurement): string {
   const parts: string[] = [];
 
   if (measurement.weight) {
-    const weight = weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
+    const weight =
+      weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
     const unit = weightUnit === "kg" ? "kg" : "lb";
     parts.push(`Weight: ${weight.toFixed(1)} ${unit}`);
   }
