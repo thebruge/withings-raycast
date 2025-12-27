@@ -161,7 +161,6 @@ ${prefs.includeBloodPressure ? "Blood pressure measurements will be included whe
             title="Open Preferences"
             target="raycast://extensions/preferences"
             icon={Icon.Gear}
-            shortcut={{ modifiers: ["cmd"], key: "," }}
           />
           <Action.OpenInBrowser
             title="Open Withings Account"
