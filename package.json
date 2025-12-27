@@ -9,6 +9,7 @@
     "Developer Tools"
   ],
   "license": "MIT",
+  "version": "2.0.0",
   "commands": [
     {
       "name": "view-measurements",
@@ -89,6 +90,15 @@
       "title": "Include Blood Pressure",
       "description": "Sync blood pressure measurements to Garmin",
       "label": "Enable blood pressure sync"
+    },
+    {
+      "name": "lookbackDays",
+      "type": "textfield",
+      "required": false,
+      "default": "7",
+      "title": "Default Lookback Days",
+      "description": "Number of days to fetch measurements for (default: 7)",
+      "placeholder": "7"
     }
   ],
   "dependencies": {

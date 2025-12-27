@@ -18,12 +18,19 @@ import {
 
 interface Preferences {
   weightUnit?: string;
+  lookbackDays?: string;
 }
 
 export default function ViewMeasurements() {
   const [measurements, setMeasurements] = useState<WithingsMeasurement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const preferences = getPreferenceValues<Preferences>();
+
+  // Calculate lookback days for empty view message
+  const lookbackDays = parseInt(preferences.lookbackDays || "7", 10);
+  const validLookbackDays =
+    isNaN(lookbackDays) || lookbackDays < 1 ? 7 : lookbackDays;
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -118,7 +125,7 @@ export default function ViewMeasurements() {
         <List.EmptyView
           icon={Icon.MagnifyingGlass}
           title="No Measurements Found"
-          description="No measurements found in the last 7 days"
+          description={`No measurements found in the last ${validLookbackDays} days`}
           actions={
             <ActionPanel>
               <Action

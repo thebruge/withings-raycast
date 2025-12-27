@@ -19,7 +19,9 @@ type ExtensionPreferences = {
   /** Weight Unit - Display weight in pounds or kilograms */
   "weightUnit": "lbs" | "kg",
   /** Include Blood Pressure - Sync blood pressure measurements to Garmin */
-  "includeBloodPressure": boolean
+  "includeBloodPressure": boolean,
+  /** Default Lookback Days - Number of days to fetch measurements for (default: 7) */
+  "lookbackDays": string
 }
 
 /** Preferences accessible in all the extension's commands */

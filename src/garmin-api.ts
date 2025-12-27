@@ -114,6 +114,117 @@ export class GarminAPI {
       );
     }
   }
+
+  async getWeightDataForDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<DateWeightMap> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      const weightMap: DateWeightMap = {};
+      const currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        try {
+          const weightData = await this.client.getDailyWeightData(currentDate);
+
+          if (
+            weightData &&
+            weightData.dateWeightList &&
+            weightData.dateWeightList.length > 0
+          ) {
+            const latestMeasurement =
+              weightData.dateWeightList[weightData.dateWeightList.length - 1];
+            const dateKey = latestMeasurement.calendarDate;
+
+            weightMap[dateKey] = {
+              weight: latestMeasurement.weight,
+              timestamp: latestMeasurement.timestampGMT,
+              bodyFat: latestMeasurement.bodyFat ?? undefined,
+              muscleMass: latestMeasurement.muscleMass ?? undefined,
+            };
+          }
+        } catch (dayError) {
+          console.log(
+            `No Garmin weight data for ${currentDate.toISOString().split("T")[0]}`,
+          );
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      return weightMap;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch Garmin weight data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  async measurementExistsInGarmin(
+    date: Date,
+    weight: number,
+  ): Promise<boolean> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      const weightData = await this.client.getDailyWeightData(date);
+
+      if (
+        !weightData ||
+        !weightData.dateWeightList ||
+        weightData.dateWeightList.length === 0
+      ) {
+        return false;
+      }
+
+      const TOLERANCE_KG = 0.1;
+      return weightData.dateWeightList.some(
+        (measurement: { weight: number }) =>
+          Math.abs(measurement.weight - weight) < TOLERANCE_KG,
+      );
+    } catch (error) {
+      return false;
+    }
+  }
+}
+
+// Garmin weight data interfaces
+export interface GarminWeightData {
+  startDate: string;
+  endDate: string;
+  dateWeightList: Array<{
+    samplePk: number;
+    date: number;
+    calendarDate: string;
+    weight: number;
+    bmi: number | null;
+    bodyFat: number | null;
+    bodyWater: number | null;
+    boneMass: number | null;
+    muscleMass: number | null;
+    sourceType: string;
+    timestampGMT: number;
+  }>;
+  totalAverage: {
+    from: number;
+    until: number;
+    weight: number;
+  };
+}
+
+export interface DateWeightMap {
+  [dateString: string]: {
+    weight: number;
+    timestamp: number;
+    bodyFat?: number;
+    muscleMass?: number;
+  };
 }
 
 // FIT file creation utilities

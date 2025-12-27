@@ -7,6 +7,8 @@ interface Preferences {
   garminUsername?: string;
   garminPassword?: string;
   includeBloodPressure?: boolean;
+  weightUnit?: string;
+  lookbackDays?: string;
 }
 
 // Withings OAuth Configuration
@@ -210,7 +212,14 @@ export async function getMeasurements(
     throw new Error("Not authenticated. Please configure Withings first.");
   }
 
-  const startDate = fromDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Default: last 7 days
+  // Get lookback days from preferences
+  const prefs = getPreferenceValues<Preferences>();
+  const lookbackDays = parseInt(prefs.lookbackDays || "7", 10);
+  const validLookbackDays =
+    isNaN(lookbackDays) || lookbackDays < 1 ? 7 : lookbackDays;
+
+  const startDate =
+    fromDate || new Date(Date.now() - validLookbackDays * 24 * 60 * 60 * 1000);
   const endDate = toDate || new Date();
 
   const params = new URLSearchParams({

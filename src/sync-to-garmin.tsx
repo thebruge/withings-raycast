@@ -8,6 +8,7 @@ import {
   Color,
   getPreferenceValues,
   Detail,
+  Form,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import {
@@ -16,7 +17,12 @@ import {
   authorize,
   WithingsMeasurement,
 } from "./withings-api";
-import { GarminAPI, createFitFile, FitFileData } from "./garmin-api";
+import {
+  GarminAPI,
+  createFitFile,
+  FitFileData,
+  DateWeightMap,
+} from "./garmin-api";
 
 interface Preferences {
   garminUsername: string;
@@ -35,6 +41,12 @@ export default function SyncToGarmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [syncResults, setSyncResults] = useState<SyncResult[]>([]);
+  const [showDateRangeForm, setShowDateRangeForm] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
+  const [garminWeightData, setGarminWeightData] =
+    useState<DateWeightMap | null>(null);
+  const [isCheckingGarmin, setIsCheckingGarmin] = useState(false);
   const prefs = getPreferenceValues<Preferences>();
 
   useEffect(() => {
@@ -255,6 +267,278 @@ export default function SyncToGarmin() {
     });
   }
 
+  async function checkGarminData() {
+    if (!prefs.garminUsername || !prefs.garminPassword) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Garmin credentials missing",
+        message: "Please configure Garmin credentials first",
+      });
+      return;
+    }
+
+    try {
+      setIsCheckingGarmin(true);
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Checking Garmin Connect...",
+        message: "Fetching existing weight data",
+      });
+
+      const garmin = new GarminAPI();
+
+      if (measurements.length === 0) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No measurements",
+          message: "Load Withings measurements first",
+        });
+        return;
+      }
+
+      const oldestMeasurement = measurements[measurements.length - 1];
+      const newestMeasurement = measurements[0];
+
+      const weightData = await garmin.getWeightDataForDateRange(
+        oldestMeasurement.date,
+        newestMeasurement.date,
+      );
+
+      setGarminWeightData(weightData);
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Garmin data loaded",
+        message: `Found ${Object.keys(weightData).length} measurements`,
+      });
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to check Garmin",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      setGarminWeightData(null);
+    } finally {
+      setIsCheckingGarmin(false);
+    }
+  }
+
+  async function syncOnlyNew() {
+    if (!garminWeightData) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Check Garmin first",
+        message: "Use 'Check Garmin for Existing Data' action first",
+      });
+      return;
+    }
+
+    const newMeasurements = measurements.filter((measurement) => {
+      const dateKey = measurement.date.toISOString().split("T")[0];
+      const existsInGarmin = garminWeightData[dateKey];
+
+      if (!existsInGarmin) {
+        return true;
+      }
+
+      if (measurement.weight) {
+        const weightDiff = Math.abs(measurement.weight - existsInGarmin.weight);
+        return weightDiff >= 0.1;
+      }
+
+      return false;
+    });
+
+    if (newMeasurements.length === 0) {
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Already synced",
+        message: "All measurements already exist in Garmin",
+      });
+      return;
+    }
+
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Syncing new measurements",
+      message: `${newMeasurements.length} to sync`,
+    });
+
+    for (const measurement of newMeasurements) {
+      await syncMeasurement(measurement);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Sync complete",
+      message: `Synced ${newMeasurements.length} new measurements`,
+    });
+  }
+
+  async function syncFromSelected(selectedMeasurement: WithingsMeasurement) {
+    const selectedIndex = measurements.findIndex(
+      (m) => m.date.getTime() === selectedMeasurement.date.getTime(),
+    );
+
+    if (selectedIndex === -1) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Error",
+        message: "Selected measurement not found",
+      });
+      return;
+    }
+
+    const measurementsToSync = measurements.slice(0, selectedIndex + 1);
+
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Syncing forward",
+      message: `${measurementsToSync.length} measurements`,
+    });
+
+    for (const measurement of measurementsToSync.reverse()) {
+      await syncMeasurement(measurement);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Sync complete",
+      message: `Synced ${measurementsToSync.length} measurements`,
+    });
+  }
+
+  async function handleCustomDateRangeSync() {
+    if (!customStartDate || !customEndDate) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Both start and end dates are required",
+      });
+      return;
+    }
+
+    if (customStartDate > customEndDate) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Start date must be before end date",
+      });
+      return;
+    }
+
+    const daysDiff = Math.ceil(
+      (customEndDate.getTime() - customStartDate.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+    if (daysDiff > 90) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Date Range Too Large",
+        message: "Please select a range of 90 days or less",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Fetching measurements",
+        message: `${daysDiff} days`,
+      });
+
+      const customMeasurements = await getMeasurements(
+        customStartDate,
+        customEndDate,
+      );
+
+      if (customMeasurements.length === 0) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No measurements found",
+          message: "No data in selected date range",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Syncing measurements",
+        message: `${customMeasurements.length} to sync`,
+      });
+
+      for (const measurement of customMeasurements) {
+        await syncMeasurement(measurement);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Custom sync complete",
+        message: `Synced ${customMeasurements.length} measurements`,
+      });
+
+      setShowDateRangeForm(false);
+      setCustomStartDate(null);
+      setCustomEndDate(null);
+      await loadMeasurements();
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Sync failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function CustomDateRangeForm() {
+    return (
+      <Form
+        actions={
+          <ActionPanel>
+            <Action.SubmitForm
+              title="Sync Date Range"
+              onSubmit={handleCustomDateRangeSync}
+              icon={Icon.Upload}
+            />
+            <Action
+              title="Cancel"
+              onAction={() => setShowDateRangeForm(false)}
+              icon={Icon.XMarkCircle}
+              shortcut={{ modifiers: ["cmd"], key: "escape" }}
+            />
+          </ActionPanel>
+        }
+      >
+        <Form.DatePicker
+          id="startDate"
+          title="Start Date"
+          value={customStartDate}
+          onChange={setCustomStartDate}
+          max={new Date()}
+        />
+        <Form.DatePicker
+          id="endDate"
+          title="End Date"
+          value={customEndDate}
+          onChange={setCustomEndDate}
+          max={new Date()}
+          min={customStartDate || undefined}
+        />
+        <Form.Description
+          title="Info"
+          text="Select a date range to sync (max 90 days). All measurements in this range will be synced to Garmin."
+        />
+      </Form>
+    );
+  }
+
   if (!authenticated) {
     return (
       <List isLoading={isLoading}>
@@ -292,6 +576,11 @@ export default function SyncToGarmin() {
     );
   }
 
+  // Show custom date range form if requested
+  if (showDateRangeForm) {
+    return <CustomDateRangeForm />;
+  }
+
   // Count today's measurements
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -309,7 +598,7 @@ export default function SyncToGarmin() {
       <List.Section title="Actions">
         <List.Item
           title="Sync Today's Data"
-          subtitle="Sync all measurements from today (weight + blood pressure)"
+          subtitle="Sync all measurements from today"
           icon={Icon.Calendar}
           accessories={[
             {
@@ -330,7 +619,7 @@ export default function SyncToGarmin() {
         />
         <List.Item
           title="Sync All Recent Measurements"
-          subtitle="Sync the last 7 measurements to Garmin"
+          subtitle="Sync the last 7 measurements"
           icon={Icon.Upload}
           accessories={[
             { tag: { value: `${Math.min(measurements.length, 7)} items` } },
@@ -345,6 +634,56 @@ export default function SyncToGarmin() {
             </ActionPanel>
           }
         />
+        <List.Item
+          title="Sync Custom Date Range"
+          subtitle="Choose specific dates to sync"
+          icon={Icon.Calendar}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Choose Date Range"
+                onAction={() => setShowDateRangeForm(true)}
+                icon={Icon.Calendar}
+              />
+            </ActionPanel>
+          }
+        />
+        <List.Item
+          title="Check Garmin for Existing Data"
+          subtitle="Fetch existing weight data from Garmin"
+          icon={Icon.Download}
+          accessories={
+            garminWeightData
+              ? [
+                  {
+                    tag: {
+                      value: `${Object.keys(garminWeightData).length} found`,
+                      color: Color.Green,
+                    },
+                  },
+                ]
+              : isCheckingGarmin
+                ? [{ tag: { value: "Checking...", color: Color.Blue } }]
+                : []
+          }
+          actions={
+            <ActionPanel>
+              <Action
+                title="Check Garmin"
+                onAction={checkGarminData}
+                icon={Icon.Download}
+              />
+              {garminWeightData && (
+                <Action
+                  title="Sync Only New"
+                  onAction={syncOnlyNew}
+                  icon={Icon.Stars}
+                  shortcut={{ modifiers: ["cmd"], key: "n" }}
+                />
+              )}
+            </ActionPanel>
+          }
+        />
       </List.Section>
 
       <List.Section title="Recent Measurements">
@@ -353,6 +692,8 @@ export default function SyncToGarmin() {
             key={index}
             measurement={measurement}
             onSync={() => syncMeasurement(measurement)}
+            onSyncFromSelected={() => syncFromSelected(measurement)}
+            garminWeightData={garminWeightData}
             syncResult={syncResults.find(
               (r) => r.measurementDate === measurement.date,
             )}
@@ -366,12 +707,16 @@ export default function SyncToGarmin() {
 interface MeasurementItemProps {
   measurement: WithingsMeasurement;
   onSync: () => void;
+  onSyncFromSelected: () => void;
+  garminWeightData: DateWeightMap | null;
   syncResult?: SyncResult;
 }
 
 function MeasurementItem({
   measurement,
   onSync,
+  onSyncFromSelected,
+  garminWeightData,
   syncResult,
 }: MeasurementItemProps) {
   const formattedDate = measurement.date.toLocaleDateString("en-US", {
@@ -417,6 +762,30 @@ function MeasurementItem({
       actions={
         <ActionPanel>
           <Action title="Sync to Garmin" onAction={onSync} icon={Icon.Upload} />
+          <Action
+            title="Sync This + All Newer"
+            onAction={onSyncFromSelected}
+            icon={Icon.ArrowUp}
+            shortcut={{ modifiers: ["opt"], key: "enter" }}
+          />
+          {garminWeightData && (
+            <Action
+              title="Check If in Garmin"
+              onAction={async () => {
+                const dateKey = measurement.date.toISOString().split("T")[0];
+                const exists = garminWeightData[dateKey];
+                await showToast({
+                  style: exists ? Toast.Style.Success : Toast.Style.Failure,
+                  title: exists ? "Found in Garmin" : "Not in Garmin",
+                  message: exists
+                    ? `Weight: ${exists.weight.toFixed(1)} kg`
+                    : "Not synced",
+                });
+              }}
+              icon={Icon.MagnifyingGlass}
+              shortcut={{ modifiers: ["cmd"], key: "g" }}
+            />
+          )}
         </ActionPanel>
       }
     />
