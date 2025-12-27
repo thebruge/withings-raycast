@@ -47,6 +47,8 @@ export default function SyncToGarmin() {
   const [garminWeightData, setGarminWeightData] =
     useState<DateWeightMap | null>(null);
   const [isCheckingGarmin, setIsCheckingGarmin] = useState(false);
+  const [lastGarminDate, setLastGarminDate] = useState<Date | null>(null);
+  const [isCheckingLastEntry, setIsCheckingLastEntry] = useState(false);
   const prefs = getPreferenceValues<Preferences>();
 
   useEffect(() => {
@@ -376,6 +378,54 @@ export default function SyncToGarmin() {
     });
   }
 
+  async function checkLastGarminEntry() {
+    if (!prefs.garminUsername || !prefs.garminPassword) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Garmin credentials missing",
+        message: "Please configure Garmin credentials first",
+      });
+      return;
+    }
+
+    try {
+      setIsCheckingLastEntry(true);
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Finding last Garmin entry...",
+        message: "Searching up to 90 days back",
+      });
+
+      const garmin = new GarminAPI();
+      const foundDate = await garmin.getLastGarminEntryDate();
+
+      setLastGarminDate(foundDate);
+
+      if (foundDate) {
+        await showToast({
+          style: Toast.Style.Success,
+          title: "Last Garmin entry found",
+          message: foundDate.toLocaleDateString(),
+        });
+      } else {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No Garmin entries found",
+          message: "No weight data in last 90 days",
+        });
+      }
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to check Garmin",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      setLastGarminDate(null);
+    } finally {
+      setIsCheckingLastEntry(false);
+    }
+  }
+
   async function syncSinceLastGarminEntry() {
     if (!prefs.garminUsername || !prefs.garminPassword) {
       await showToast({
@@ -394,9 +444,9 @@ export default function SyncToGarmin() {
       });
 
       const garmin = new GarminAPI();
-      const lastGarminDate = await garmin.getLastGarminEntryDate();
+      const lastGarminDateFound = await garmin.getLastGarminEntryDate();
 
-      if (!lastGarminDate) {
+      if (!lastGarminDateFound) {
         await showToast({
           style: Toast.Style.Failure,
           title: "No Garmin entries found",
@@ -407,14 +457,14 @@ export default function SyncToGarmin() {
 
       // Filter measurements that are after the last Garmin entry
       const measurementsToSync = measurements.filter(
-        (m) => m.date > lastGarminDate,
+        (m) => m.date > lastGarminDateFound,
       );
 
       if (measurementsToSync.length === 0) {
         await showToast({
           style: Toast.Style.Success,
           title: "Already up to date",
-          message: `Last Garmin entry: ${lastGarminDate.toLocaleDateString()}`,
+          message: `Last Garmin entry: ${lastGarminDateFound.toLocaleDateString()}`,
         });
         return;
       }
@@ -422,7 +472,7 @@ export default function SyncToGarmin() {
       await showToast({
         style: Toast.Style.Animated,
         title: "Syncing new measurements",
-        message: `${measurementsToSync.length} since ${lastGarminDate.toLocaleDateString()}`,
+        message: `${measurementsToSync.length} since ${lastGarminDateFound.toLocaleDateString()}`,
       });
 
       // Sync from oldest to newest
@@ -659,6 +709,11 @@ export default function SyncToGarmin() {
     return measurementDate.getTime() === today.getTime();
   });
 
+  // Calculate how many days would be synced with Smart Sync
+  const daysToSmartSync = lastGarminDate
+    ? measurements.filter((m) => m.date > lastGarminDate).length
+    : 0;
+
   return (
     <List
       isLoading={isLoading}
@@ -707,6 +762,23 @@ export default function SyncToGarmin() {
           title="Smart Sync Since Last Garmin Entry"
           subtitle="Sync only measurements newer than last Garmin entry"
           icon={Icon.Stars}
+          accessories={
+            lastGarminDate
+              ? [
+                  {
+                    tag: {
+                      value: `${daysToSmartSync} days to sync`,
+                      color: daysToSmartSync > 0 ? Color.Orange : Color.Green,
+                    },
+                  },
+                  {
+                    text: `Last: ${lastGarminDate.toLocaleDateString()}`,
+                  },
+                ]
+              : isCheckingLastEntry
+                ? [{ tag: { value: "Checking...", color: Color.Blue } }]
+                : []
+          }
           actions={
             <ActionPanel>
               <Action
@@ -714,6 +786,12 @@ export default function SyncToGarmin() {
                 onAction={syncSinceLastGarminEntry}
                 icon={Icon.Stars}
                 shortcut={{ modifiers: ["cmd"], key: "s" }}
+              />
+              <Action
+                title="Check Last Garmin Entry"
+                onAction={checkLastGarminEntry}
+                icon={Icon.Download}
+                shortcut={{ modifiers: ["cmd"], key: "l" }}
               />
             </ActionPanel>
           }
