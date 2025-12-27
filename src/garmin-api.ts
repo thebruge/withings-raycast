@@ -136,15 +136,21 @@ export class GarminAPI {
             weightData.dateWeightList &&
             weightData.dateWeightList.length > 0
           ) {
-            const latestMeasurement =
-              weightData.dateWeightList[weightData.dateWeightList.length - 1];
-            const dateKey = latestMeasurement.calendarDate;
+            // Store ALL measurements for this day, not just the latest
+            // This helps detect duplicates
+            const dateKey = currentDate.toISOString().split("T")[0];
+            const measurements = weightData.dateWeightList;
+
+            // Store the most recent measurement for this day
+            const latestMeasurement = measurements[measurements.length - 1];
 
             weightMap[dateKey] = {
-              weight: latestMeasurement.weight,
+              weight: latestMeasurement.weight / 1000, // Convert grams to kg
               timestamp: latestMeasurement.timestampGMT,
               bodyFat: latestMeasurement.bodyFat ?? undefined,
               muscleMass: latestMeasurement.muscleMass ?? undefined,
+              // Add count of measurements to detect duplicates
+              count: measurements.length,
             };
           }
         } catch (dayError) {
@@ -180,15 +186,30 @@ export class GarminAPI {
         !weightData.dateWeightList ||
         weightData.dateWeightList.length === 0
       ) {
+        console.log(
+          `[GARMIN] No data found for ${date.toISOString().split("T")[0]}`,
+        );
         return false;
       }
 
-      const TOLERANCE_KG = 0.1;
-      return weightData.dateWeightList.some(
-        (measurement: { weight: number }) =>
-          Math.abs(measurement.weight - weight) < TOLERANCE_KG,
+      console.log(
+        `[GARMIN] Found ${weightData.dateWeightList.length} measurements for ${date.toISOString().split("T")[0]}:`,
+        weightData.dateWeightList.map((m: { weight: number }) => (m.weight / 1000).toFixed(2) + "kg"),
       );
+
+      const TOLERANCE_KG = 0.1;
+      const exists = weightData.dateWeightList.some(
+        (measurement: { weight: number }) =>
+          Math.abs(measurement.weight / 1000 - weight) < TOLERANCE_KG,
+      );
+
+      console.log(
+        `[GARMIN] Checking weight ${weight}kg - Match found: ${exists}`,
+      );
+
+      return exists;
     } catch (error) {
+      console.error(`[GARMIN] Error checking measurement:`, error);
       return false;
     }
   }
@@ -274,6 +295,7 @@ export interface DateWeightMap {
     timestamp: number;
     bodyFat?: number;
     muscleMass?: number;
+    count?: number;
   };
 }
 

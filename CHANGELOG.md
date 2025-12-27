@@ -7,23 +7,40 @@ Major feature update with enhanced sync capabilities.
 ### New Features
 
 1. **Configurable Lookback Days**: Set default number of days to fetch measurements in preferences (default: 7)
-2. **Custom Date Range Sync**: Sync specific date ranges up to 90 days with validation
-3. **Garmin Duplicate Detection**: Check existing Garmin data and sync only new measurements
-4. **Bulk Forward Sync**: Select a measurement and sync it plus all newer measurements (Alt+Enter)
+2. **Smart Sync Since Last Garmin Entry**: Automatically finds your last Garmin weight entry and syncs only newer Withings measurements
+3. **Custom Date Range Sync**: Sync specific date ranges up to 90 days with validation
+4. **Garmin Duplicate Detection**: Check existing Garmin data and sync only new measurements
+5. **Bulk Forward Sync**: Select a measurement and sync it plus all newer measurements (Alt+Enter)
 
 ### Keyboard Shortcuts
 
+- `⌘S` - Smart sync only measurements newer than last Garmin entry
+- `⌘L` - Check last Garmin entry date
 - `⌘N` - Sync only new measurements (after checking Garmin)
 - `⌥Enter` - Sync selected measurement + all newer
 - `⌘G` - Check if measurement exists in Garmin
-- `⌘Escape` - Cancel date range form
 
 ### UI Improvements
 
 - Added "Sync Custom Date Range" action with date picker form
-- Added "Check Garmin for Existing Data" action with visual feedback
+- Added "Check Garmin for Existing Data" action with visual feedback showing "X new, Y already synced"
 - Enhanced measurement actions with forward sync and duplicate checking
 - Dynamic empty view message based on configured lookback days
+- Duplicate detection warning badge shows when multiple entries exist for same day
+
+### Bug Fixes
+
+- **Duplicate Upload Prevention**: Now checks Garmin before uploading to prevent creating duplicate entries
+- **Auto-refresh After Sync**: Automatically refreshes Garmin data after sync operations to show accurate status
+- **Cache Management**: Properly clears cached Garmin data to ensure fresh checks
+- **Duplicate Count Tracking**: Detects when multiple measurements exist for the same day in Garmin
+
+### Technical Improvements
+
+- Added `count` field to track number of measurements per day in Garmin
+- Improved date-based comparison using calendar date strings
+- Added 2-second delay after sync for Garmin API indexing
+- Enhanced error handling for duplicate detection
 
 ### Breaking Changes
 

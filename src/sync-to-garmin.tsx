@@ -23,6 +23,7 @@ import {
   FitFileData,
   DateWeightMap,
 } from "./garmin-api";
+import { logDataComparison, writeDebugData } from "./debug-utils";
 
 interface Preferences {
   garminUsername: string;
@@ -135,6 +136,39 @@ export default function SyncToGarmin() {
       });
 
       const garmin = new GarminAPI();
+
+      // Check if this measurement already exists in Garmin (prevent duplicates)
+      if (measurement.weight) {
+        console.log(`[SYNC] Checking if measurement exists in Garmin:`, {
+          date: measurement.date.toISOString(),
+          weight: measurement.weight,
+        });
+
+        const exists = await garmin.measurementExistsInGarmin(
+          measurement.date,
+          measurement.weight,
+        );
+
+        console.log(`[SYNC] Measurement exists check result: ${exists}`);
+
+        if (exists) {
+          await showToast({
+            style: Toast.Style.Success,
+            title: "Already synced",
+            message: "This measurement already exists in Garmin",
+          });
+
+          setSyncResults((prev) => [
+            ...prev,
+            {
+              success: true,
+              message: "Already exists (skipped)",
+              measurementDate: measurement.date,
+            },
+          ]);
+          return;
+        }
+      }
 
       // Build FIT file data
       const fitData: FitFileData = {
@@ -280,6 +314,8 @@ export default function SyncToGarmin() {
     }
 
     try {
+      // Clear old data first to ensure fresh fetch
+      setGarminWeightData(null);
       setIsCheckingGarmin(true);
       await showToast({
         style: Toast.Style.Animated,
@@ -305,6 +341,26 @@ export default function SyncToGarmin() {
         oldestMeasurement.date,
         newestMeasurement.date,
       );
+
+      console.log(`[CHECK] Garmin weight data fetched:`, {
+        dateRange: `${oldestMeasurement.date.toISOString().split("T")[0]} to ${newestMeasurement.date.toISOString().split("T")[0]}`,
+        daysFound: Object.keys(weightData).length,
+        data: weightData,
+      });
+
+      // Log detailed comparison
+      logDataComparison(measurements, weightData);
+
+      // Write debug data to file for inspection
+      await writeDebugData("garmin-check", {
+        timestamp: new Date().toISOString(),
+        withingsMeasurements: measurements.map((m) => ({
+          date: m.date.toISOString(),
+          weight: m.weight,
+          bodyFat: m.fatRatio,
+        })),
+        garminData: weightData,
+      });
 
       setGarminWeightData(weightData);
 
@@ -376,6 +432,19 @@ export default function SyncToGarmin() {
       title: "Sync complete",
       message: `Synced ${newMeasurements.length} new measurements`,
     });
+
+    // Wait a moment for Garmin to process uploads, then refresh data
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Clear cache and automatically check Garmin again to show updated status
+    setGarminWeightData(null);
+
+    await showToast({
+      style: Toast.Style.Animated,
+      title: "Refreshing Garmin data...",
+    });
+
+    await checkGarminData();
   }
 
   async function checkLastGarminEntry() {
@@ -486,6 +555,20 @@ export default function SyncToGarmin() {
         title: "Smart sync complete",
         message: `Synced ${measurementsToSync.length} new measurements`,
       });
+
+      // Wait a moment for Garmin to process uploads, then refresh data
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Clear cache and automatically check Garmin again to show updated status
+      setGarminWeightData(null);
+      setLastGarminDate(null);
+
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Refreshing Garmin data...",
+      });
+
+      await checkGarminData();
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -630,7 +713,6 @@ export default function SyncToGarmin() {
               title="Cancel"
               onAction={() => setShowDateRangeForm(false)}
               icon={Icon.XMarkCircle}
-              shortcut={{ modifiers: ["cmd"], key: "escape" }}
             />
           </ActionPanel>
         }
@@ -816,14 +898,45 @@ export default function SyncToGarmin() {
           icon={Icon.Download}
           accessories={
             garminWeightData
-              ? [
-                  {
-                    tag: {
-                      value: `${Object.keys(garminWeightData).length} days in Garmin`,
-                      color: Color.Green,
+              ? (() => {
+                  const newCount = measurements.filter((m) => {
+                    const dateKey = m.date.toISOString().split("T")[0];
+                    const existsInGarmin = garminWeightData[dateKey];
+                    if (!existsInGarmin) return true;
+                    if (m.weight) {
+                      return Math.abs(m.weight - existsInGarmin.weight) >= 0.1;
+                    }
+                    return false;
+                  }).length;
+                  const alreadySynced = measurements.length - newCount;
+
+                  // Count duplicates detected
+                  const duplicatesDetected = Object.values(garminWeightData).filter(
+                    (data) => data.count && data.count > 1,
+                  ).length;
+
+                  const accessories: List.Item.Accessory[] = [
+                    {
+                      tag: {
+                        value: `${newCount} new, ${alreadySynced} already synced`,
+                        color: newCount > 0 ? Color.Orange : Color.Green,
+                      },
                     },
-                  },
-                ]
+                  ];
+
+                  // Add duplicate warning if detected
+                  if (duplicatesDetected > 0) {
+                    accessories.push({
+                      tag: {
+                        value: `⚠️ ${duplicatesDetected} days with duplicates`,
+                        color: Color.Red,
+                      },
+                      tooltip: "Some days have multiple entries in Garmin",
+                    });
+                  }
+
+                  return accessories;
+                })()
               : isCheckingGarmin
                 ? [{ tag: { value: "Checking...", color: Color.Blue } }]
                 : []
