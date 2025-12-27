@@ -6,6 +6,7 @@ import {
   Color,
   showToast,
   Toast,
+  getPreferenceValues,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import {
@@ -14,6 +15,10 @@ import {
   WithingsMeasurement,
   authorize,
 } from "./withings-api";
+
+interface Preferences {
+  weightUnit?: string;
+}
 
 export default function ViewMeasurements() {
   const [measurements, setMeasurements] = useState<WithingsMeasurement[]>([]);
@@ -143,6 +148,9 @@ interface MeasurementItemProps {
 }
 
 function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
+  const preferences = getPreferenceValues<Preferences>();
+  const weightUnit = preferences.weightUnit || "lbs";
+
   const formattedDate = measurement.date.toLocaleDateString("en-US", {
     weekday: "short",
     year: "numeric",
@@ -154,12 +162,13 @@ function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
 
   const accessories: List.Item.Accessory[] = [];
 
-  // Convert kg to lbs (1 kg = 2.20462 lbs)
+  // Display weight in user's preferred unit
   if (measurement.weight) {
-    const weightLbs = measurement.weight * 2.20462;
+    const weight = weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
+    const unit = weightUnit === "kg" ? "kg" : "lb";
     accessories.push({
       tag: {
-        value: `${weightLbs.toFixed(1)} lb`,
+        value: `${weight.toFixed(1)} ${unit}`,
         color: Color.Blue,
       },
       icon: Icon.Weights,
@@ -225,11 +234,14 @@ function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
 }
 
 function buildSubtitle(measurement: WithingsMeasurement): string {
+  const preferences = getPreferenceValues<Preferences>();
+  const weightUnit = preferences.weightUnit || "lbs";
   const parts: string[] = [];
 
   if (measurement.weight) {
-    const weightLbs = measurement.weight * 2.20462;
-    parts.push(`Weight: ${weightLbs.toFixed(1)} lb`);
+    const weight = weightUnit === "kg" ? measurement.weight : measurement.weight * 2.20462;
+    const unit = weightUnit === "kg" ? "kg" : "lb";
+    parts.push(`Weight: ${weight.toFixed(1)} ${unit}`);
   }
 
   if (measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {

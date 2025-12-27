@@ -64,6 +64,24 @@
       "description": "Your Garmin Connect password"
     },
     {
+      "name": "weightUnit",
+      "type": "dropdown",
+      "required": false,
+      "default": "lbs",
+      "title": "Weight Unit",
+      "description": "Display weight in pounds or kilograms",
+      "data": [
+        {
+          "title": "Pounds (lb)",
+          "value": "lbs"
+        },
+        {
+          "title": "Kilograms (kg)",
+          "value": "kg"
+        }
+      ]
+    },
+    {
       "name": "includeBloodPressure",
       "type": "checkbox",
       "required": false,

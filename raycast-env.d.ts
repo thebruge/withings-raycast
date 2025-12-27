@@ -16,6 +16,8 @@ type ExtensionPreferences = {
   "garminUsername"?: string,
   /** Garmin Password - Your Garmin Connect password */
   "garminPassword"?: string,
+  /** Weight Unit - Display weight in pounds or kilograms */
+  "weightUnit": "lbs" | "kg",
   /** Include Blood Pressure - Sync blood pressure measurements to Garmin */
   "includeBloodPressure": boolean
 }
