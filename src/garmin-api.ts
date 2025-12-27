@@ -192,6 +192,56 @@ export class GarminAPI {
       return false;
     }
   }
+
+  async getLastGarminEntryDate(): Promise<Date | null> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      // Search backwards from today up to 90 days
+      const today = new Date();
+      const ninetyDaysAgo = new Date(
+        today.getTime() - 90 * 24 * 60 * 60 * 1000,
+      );
+
+      const currentDate = new Date(today);
+
+      while (currentDate >= ninetyDaysAgo) {
+        try {
+          const weightData = await this.client.getDailyWeightData(currentDate);
+
+          if (
+            weightData &&
+            weightData.dateWeightList &&
+            weightData.dateWeightList.length > 0
+          ) {
+            // Found the most recent entry - return the date
+            const latestMeasurement =
+              weightData.dateWeightList[weightData.dateWeightList.length - 1];
+            // Parse the calendarDate (format: YYYY-MM-DD)
+            const dateParts = latestMeasurement.calendarDate.split("-");
+            return new Date(
+              parseInt(dateParts[0]),
+              parseInt(dateParts[1]) - 1,
+              parseInt(dateParts[2]),
+            );
+          }
+        } catch (dayError) {
+          // No data for this day, continue searching backwards
+        }
+
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      // No entries found in the last 90 days
+      return null;
+    } catch (error) {
+      throw new Error(
+        `Failed to get last Garmin entry: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
 }
 
 // Garmin weight data interfaces

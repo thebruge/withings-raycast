@@ -376,6 +376,75 @@ export default function SyncToGarmin() {
     });
   }
 
+  async function syncSinceLastGarminEntry() {
+    if (!prefs.garminUsername || !prefs.garminPassword) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Garmin credentials missing",
+        message: "Please configure Garmin credentials first",
+      });
+      return;
+    }
+
+    try {
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Finding last Garmin entry...",
+        message: "Searching up to 90 days back",
+      });
+
+      const garmin = new GarminAPI();
+      const lastGarminDate = await garmin.getLastGarminEntryDate();
+
+      if (!lastGarminDate) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "No Garmin entries found",
+          message: "No weight data in last 90 days",
+        });
+        return;
+      }
+
+      // Filter measurements that are after the last Garmin entry
+      const measurementsToSync = measurements.filter(
+        (m) => m.date > lastGarminDate,
+      );
+
+      if (measurementsToSync.length === 0) {
+        await showToast({
+          style: Toast.Style.Success,
+          title: "Already up to date",
+          message: `Last Garmin entry: ${lastGarminDate.toLocaleDateString()}`,
+        });
+        return;
+      }
+
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Syncing new measurements",
+        message: `${measurementsToSync.length} since ${lastGarminDate.toLocaleDateString()}`,
+      });
+
+      // Sync from oldest to newest
+      for (const measurement of measurementsToSync.reverse()) {
+        await syncMeasurement(measurement);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Smart sync complete",
+        message: `Synced ${measurementsToSync.length} new measurements`,
+      });
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Smart sync failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
   async function syncFromSelected(selectedMeasurement: WithingsMeasurement) {
     const selectedIndex = measurements.findIndex(
       (m) => m.date.getTime() === selectedMeasurement.date.getTime(),
@@ -630,6 +699,21 @@ export default function SyncToGarmin() {
                 title="Sync All"
                 onAction={syncAllRecent}
                 icon={Icon.Upload}
+              />
+            </ActionPanel>
+          }
+        />
+        <List.Item
+          title="Smart Sync Since Last Garmin Entry"
+          subtitle="Sync only measurements newer than last Garmin entry"
+          icon={Icon.Stars}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Smart Sync"
+                onAction={syncSinceLastGarminEntry}
+                icon={Icon.Stars}
+                shortcut={{ modifiers: ["cmd"], key: "s" }}
               />
             </ActionPanel>
           }
