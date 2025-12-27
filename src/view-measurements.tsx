@@ -1,0 +1,212 @@
+import { List, ActionPanel, Action, Icon, Color, showToast, Toast } from "@raycast/api";
+import { useEffect, useState } from "react";
+import { getMeasurements, isAuthenticated, WithingsMeasurement, authorize } from "./withings-api";
+
+export default function ViewMeasurements() {
+  const [measurements, setMeasurements] = useState<WithingsMeasurement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuthAndLoadData();
+  }, []);
+
+  async function checkAuthAndLoadData() {
+    try {
+      const isAuth = await isAuthenticated();
+      setAuthenticated(isAuth);
+
+      if (!isAuth) {
+        setIsLoading(false);
+        return;
+      }
+
+      await loadMeasurements();
+    } catch (error) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Error loading measurements",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      setIsLoading(false);
+    }
+  }
+
+  async function loadMeasurements() {
+    try {
+      setIsLoading(true);
+      const data = await getMeasurements();
+      setMeasurements(data);
+    } catch (error) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Error loading measurements",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleAuthorize() {
+    try {
+      await showToast({
+        style: Toast.Style.Animated,
+        title: "Authorizing with Withings...",
+      });
+
+      await authorize();
+
+      await showToast({
+        style: Toast.Style.Success,
+        title: "Successfully authorized!",
+      });
+
+      setAuthenticated(true);
+      await loadMeasurements();
+    } catch (error) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Authorization failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  if (!authenticated) {
+    return (
+      <List isLoading={isLoading}>
+        <List.EmptyView
+          icon={Icon.Lock}
+          title="Withings Not Connected"
+          description="You need to authorize Raycast to access your Withings data"
+          actions={
+            <ActionPanel>
+              <Action title="Authorize Withings" onAction={handleAuthorize} icon={Icon.Key} />
+            </ActionPanel>
+          }
+        />
+      </List>
+    );
+  }
+
+  return (
+    <List isLoading={isLoading} searchBarPlaceholder="Search measurements...">
+      {measurements.length === 0 && !isLoading ? (
+        <List.EmptyView
+          icon={Icon.MagnifyingGlass}
+          title="No Measurements Found"
+          description="No measurements found in the last 7 days"
+          actions={
+            <ActionPanel>
+              <Action title="Refresh" onAction={loadMeasurements} icon={Icon.ArrowClockwise} />
+            </ActionPanel>
+          }
+        />
+      ) : (
+        measurements.map((measurement, index) => (
+          <MeasurementItem
+            key={index}
+            measurement={measurement}
+            onRefresh={loadMeasurements}
+          />
+        ))
+      )}
+    </List>
+  );
+}
+
+interface MeasurementItemProps {
+  measurement: WithingsMeasurement;
+  onRefresh: () => void;
+}
+
+function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
+  const formattedDate = measurement.date.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const accessories: List.Item.Accessory[] = [];
+
+  if (measurement.weight) {
+    accessories.push({
+      tag: {
+        value: `${measurement.weight.toFixed(1)} kg`,
+        color: Color.Blue,
+      },
+      icon: Icon.Weight,
+      tooltip: "Weight",
+    });
+  }
+
+  if (measurement.systolicBP && measurement.diastolicBP) {
+    accessories.push({
+      tag: {
+        value: `${measurement.systolicBP.toFixed(0)}/${measurement.diastolicBP.toFixed(0)}`,
+        color: Color.Red,
+      },
+      icon: Icon.HeartRate,
+      tooltip: "Blood Pressure (systolic/diastolic)",
+    });
+  }
+
+  if (measurement.heartPulse) {
+    accessories.push({
+      tag: {
+        value: `${measurement.heartPulse.toFixed(0)} bpm`,
+        color: Color.Orange,
+      },
+      icon: Icon.Heartbeat,
+      tooltip: "Heart Rate",
+    });
+  }
+
+  if (measurement.fatRatio) {
+    accessories.push({
+      tag: {
+        value: `${measurement.fatRatio.toFixed(1)}%`,
+        color: Color.Purple,
+      },
+      tooltip: "Body Fat %",
+    });
+  }
+
+  const subtitle = buildSubtitle(measurement);
+
+  return (
+    <List.Item
+      title={formattedDate}
+      subtitle={subtitle}
+      accessories={accessories}
+      actions={
+        <ActionPanel>
+          <Action title="Refresh" onAction={onRefresh} icon={Icon.ArrowClockwise} />
+          <Action.CopyToClipboard
+            title="Copy Details"
+            content={JSON.stringify(measurement, null, 2)}
+            shortcut={{ modifiers: ["cmd"], key: "c" }}
+          />
+        </ActionPanel>
+      }
+    />
+  );
+}
+
+function buildSubtitle(measurement: WithingsMeasurement): string {
+  const parts: string[] = [];
+
+  if (measurement.weight) {
+    parts.push(`Weight: ${measurement.weight.toFixed(1)} kg`);
+  }
+
+  if (measurement.systolicBP && measurement.diastolicBP) {
+    parts.push(`BP: ${measurement.systolicBP.toFixed(0)}/${measurement.diastolicBP.toFixed(0)}`);
+  }
+
+  return parts.join(" • ");
+}

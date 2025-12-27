@@ -1,0 +1,83 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "withings-sync",
+  "title": "Withings Sync",
+  "description": "Sync your Withings health data (weight, blood pressure) to Garmin Connect",
+  "icon": "command-icon.png",
+  "author": "richard",
+  "categories": [
+    "Developer Tools",
+    "Productivity"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "view-measurements",
+      "title": "View Withings Measurements",
+      "subtitle": "Withings Sync",
+      "description": "View your recent Withings measurements",
+      "mode": "view"
+    },
+    {
+      "name": "sync-to-garmin",
+      "title": "Sync to Garmin",
+      "subtitle": "Withings Sync",
+      "description": "Sync your Withings data to Garmin Connect",
+      "mode": "view"
+    },
+    {
+      "name": "configure",
+      "title": "Configure Withings & Garmin",
+      "subtitle": "Withings Sync",
+      "description": "Set up your Withings and Garmin credentials",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "garminUsername",
+      "type": "textfield",
+      "required": false,
+      "title": "Garmin Username",
+      "description": "Your Garmin Connect username/email",
+      "placeholder": "user@example.com"
+    },
+    {
+      "name": "garminPassword",
+      "type": "password",
+      "required": false,
+      "title": "Garmin Password",
+      "description": "Your Garmin Connect password"
+    },
+    {
+      "name": "includeBloodPressure",
+      "type": "checkbox",
+      "required": false,
+      "default": true,
+      "title": "Include Blood Pressure",
+      "description": "Sync blood pressure measurements to Garmin",
+      "label": "Enable blood pressure sync"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.79.0",
+    "@raycast/utils": "^1.16.3",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.11",
+    "@types/node": "20.8.10",
+    "@types/react": "18.3.3",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
