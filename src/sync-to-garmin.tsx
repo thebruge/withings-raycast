@@ -123,9 +123,9 @@ export default function SyncToGarmin() {
         bodyFat: measurement.fatRatio,
       };
 
-      if (prefs.includeBloodPressure && measurement.systolicBP && measurement.diastolicBP) {
-        fitData.systolicBP = measurement.systolicBP;
-        fitData.diastolicBP = measurement.diastolicBP;
+      if (prefs.includeBloodPressure && measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
+        fitData.systolicBP = measurement.systolicBloodPressure;
+        fitData.diastolicBP = measurement.diastolicBloodPressure;
         fitData.heartRate = measurement.heartPulse;
       }
 
@@ -286,10 +286,10 @@ function MeasurementItem({ measurement, onSync, syncResult }: MeasurementItemPro
     });
   }
 
-  if (measurement.systolicBP && measurement.diastolicBP) {
+  if (measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
     accessories.push({
       tag: {
-        value: `${measurement.systolicBP.toFixed(0)}/${measurement.diastolicBP.toFixed(0)}`,
+        value: `${measurement.systolicBloodPressure.toFixed(0)}/${measurement.diastolicBloodPressure.toFixed(0)}`,
         color: Color.Red,
       },
     });

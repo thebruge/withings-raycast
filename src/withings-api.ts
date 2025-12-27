@@ -2,9 +2,11 @@ import { OAuth, LocalStorage } from "@raycast/api";
 import fetch from "node-fetch";
 
 // Withings OAuth Configuration
-const WITHINGS_CLIENT_ID = "183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626";
-const WITHINGS_CLIENT_SECRET = "a75d65c70a95b811df1514c16719ef7bd69fa7c5d3fd0ea2a2e2b0ed48f1765";
-const WITHINGS_REDIRECT_URI = "https://jaroslawhartman.github.io/withings-sync/contrib/withings.html";
+// Registered at: https://developer.withings.com/dashboard/
+// Redirect URI: https://raycast.com/redirect?packageName=Extension
+const WITHINGS_CLIENT_ID = "c021a4a204f59c5723a19b261cc9afbde58b8bf5d080bdcfcdc336161842ed5d";
+const WITHINGS_CLIENT_SECRET = "41d1197696866d9b8cbce1bc510690f29a5915856b9634437c071322e8806b6c";
+const WITHINGS_REDIRECT_URI = "https://raycast.com/redirect?packageName=Extension";
 
 export const withingsOAuthClient = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,

@@ -148,10 +148,11 @@ To verify FIT files are valid:
 
 1. ✅ Get basic authentication working
 2. ✅ Fetch Withings measurements
-3. 🔲 **Implement proper FIT file generation** ← You are here
-4. 🔲 Test Garmin upload
-5. 🔲 Add error handling
-6. 🔲 Polish UI
+3. ✅ **Implement proper FIT file generation**
+4. ✅ Implement Garmin authentication using garmin-connect library
+5. 🔲 Test Garmin upload ← You are here
+6. 🔲 Add error handling
+7. 🔲 Polish UI
 
 ## Resources
 

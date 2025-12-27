@@ -133,24 +133,26 @@ function MeasurementItem({ measurement, onRefresh }: MeasurementItemProps) {
 
   const accessories: List.Item.Accessory[] = [];
 
+  // Convert kg to lbs (1 kg = 2.20462 lbs)
   if (measurement.weight) {
+    const weightLbs = measurement.weight * 2.20462;
     accessories.push({
       tag: {
-        value: `${measurement.weight.toFixed(1)} kg`,
+        value: `${weightLbs.toFixed(1)} lb`,
         color: Color.Blue,
       },
-      icon: Icon.Weight,
+      icon: Icon.Weights,
       tooltip: "Weight",
     });
   }
 
-  if (measurement.systolicBP && measurement.diastolicBP) {
+  if (measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
     accessories.push({
       tag: {
-        value: `${measurement.systolicBP.toFixed(0)}/${measurement.diastolicBP.toFixed(0)}`,
+        value: `${measurement.systolicBloodPressure.toFixed(0)}/${measurement.diastolicBloodPressure.toFixed(0)}`,
         color: Color.Red,
       },
-      icon: Icon.HeartRate,
+      icon: Icon.Heart,
       tooltip: "Blood Pressure (systolic/diastolic)",
     });
   }
@@ -201,11 +203,12 @@ function buildSubtitle(measurement: WithingsMeasurement): string {
   const parts: string[] = [];
 
   if (measurement.weight) {
-    parts.push(`Weight: ${measurement.weight.toFixed(1)} kg`);
+    const weightLbs = measurement.weight * 2.20462;
+    parts.push(`Weight: ${weightLbs.toFixed(1)} lb`);
   }
 
-  if (measurement.systolicBP && measurement.diastolicBP) {
-    parts.push(`BP: ${measurement.systolicBP.toFixed(0)}/${measurement.diastolicBP.toFixed(0)}`);
+  if (measurement.systolicBloodPressure && measurement.diastolicBloodPressure) {
+    parts.push(`BP: ${measurement.systolicBloodPressure.toFixed(0)}/${measurement.diastolicBloodPressure.toFixed(0)}`);
   }
 
   return parts.join(" • ");

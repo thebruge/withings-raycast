@@ -60,8 +60,10 @@
     }
   ],
   "dependencies": {
+    "@markw65/fit-file-writer": "^0.1.7",
     "@raycast/api": "^1.79.0",
     "@raycast/utils": "^1.16.3",
+    "garmin-connect": "^1.6.2",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
