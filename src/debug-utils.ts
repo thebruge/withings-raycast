@@ -48,7 +48,9 @@ export function logDataComparison(
         `  Garmin: ${garminEntry.weight.toFixed(2)}kg (${garminEntry.count || 1} entries)`,
       );
       console.log(`  Diff: ${weightDiff?.toFixed(3)}kg`);
-      console.log(`  Match: ${weightDiff !== null && weightDiff < 0.1 ? "✓" : "✗"}\n`);
+      console.log(
+        `  Match: ${weightDiff !== null && weightDiff < 0.1 ? "✓" : "✗"}\n`,
+      );
     } else {
       console.log(`${dateKey}:`);
       console.log(`  Withings: ${m.weight?.toFixed(2)}kg`);

@@ -194,7 +194,9 @@ export class GarminAPI {
 
       console.log(
         `[GARMIN] Found ${weightData.dateWeightList.length} measurements for ${date.toISOString().split("T")[0]}:`,
-        weightData.dateWeightList.map((m: { weight: number }) => (m.weight / 1000).toFixed(2) + "kg"),
+        weightData.dateWeightList.map(
+          (m: { weight: number }) => (m.weight / 1000).toFixed(2) + "kg",
+        ),
       );
 
       const TOLERANCE_KG = 0.1;

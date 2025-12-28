@@ -914,7 +914,11 @@ export default function SyncToGarmin() {
                     const dateKey = m.date.toISOString().split("T")[0];
                     const existsInGarmin = garminWeightData[dateKey];
 
-                    const isNew = !existsInGarmin || (m.weight ? Math.abs(m.weight - existsInGarmin.weight) >= 0.1 : false);
+                    const isNew =
+                      !existsInGarmin ||
+                      (m.weight
+                        ? Math.abs(m.weight - existsInGarmin.weight) >= 0.1
+                        : false);
 
                     const debugEntry = {
                       date: dateKey,
@@ -922,8 +926,11 @@ export default function SyncToGarmin() {
                       garminWeight: existsInGarmin?.weight,
                       garminCount: existsInGarmin?.count,
                       exists: !!existsInGarmin,
-                      weightDiff: m.weight && existsInGarmin ? Math.abs(m.weight - existsInGarmin.weight) : null,
-                      isNew: isNew
+                      weightDiff:
+                        m.weight && existsInGarmin
+                          ? Math.abs(m.weight - existsInGarmin.weight)
+                          : null,
+                      isNew: isNew,
                     };
 
                     console.log(`[BADGE] Checking ${dateKey}:`, debugEntry);
@@ -949,9 +956,9 @@ export default function SyncToGarmin() {
                   });
 
                   // Count duplicates detected
-                  const duplicatesDetected = Object.values(garminWeightData).filter(
-                    (data) => data.count && data.count > 1,
-                  ).length;
+                  const duplicatesDetected = Object.values(
+                    garminWeightData,
+                  ).filter((data) => data.count && data.count > 1).length;
 
                   const accessories: List.Item.Accessory[] = [
                     {
@@ -1059,7 +1066,10 @@ function MeasurementItem({
   if (garminWeightData) {
     const dateKey = measurement.date.toISOString().split("T")[0];
     const existsInGarmin = garminWeightData[dateKey];
-    const isNew = !existsInGarmin || (measurement.weight && Math.abs(measurement.weight - existsInGarmin.weight) >= 0.1);
+    const isNew =
+      !existsInGarmin ||
+      (measurement.weight &&
+        Math.abs(measurement.weight - existsInGarmin.weight) >= 0.1);
 
     if (isNew) {
       accessories.push({
@@ -1112,7 +1122,11 @@ function MeasurementItem({
       actions={
         <ActionPanel>
           <ActionPanel.Section title="Sync Actions">
-            <Action title="Sync to Garmin" onAction={onSync} icon={Icon.Upload} />
+            <Action
+              title="Sync to Garmin"
+              onAction={onSync}
+              icon={Icon.Upload}
+            />
             <Action
               title="Sync This + All Newer"
               onAction={onSyncFromSelected}
@@ -1149,7 +1163,9 @@ function MeasurementItem({
                 <Action
                   title="Check If in Garmin"
                   onAction={async () => {
-                    const dateKey = measurement.date.toISOString().split("T")[0];
+                    const dateKey = measurement.date
+                      .toISOString()
+                      .split("T")[0];
                     const exists = garminWeightData[dateKey];
                     await showToast({
                       style: exists ? Toast.Style.Success : Toast.Style.Failure,
