@@ -7,10 +7,26 @@ Sync your Withings health data (weight, blood pressure, body composition) to Gar
 - 📊 **View Measurements**: View your recent Withings measurements including weight (lb or kg), body fat, blood pressure, and heart rate
 - ⬆️ **Sync to Garmin**: Upload your Withings data to Garmin Connect with one click
 - 📅 **Sync Today's Data**: Quick action to sync all measurements from today
-- 🏋️ **Complete Body Composition**: Syncs weight, body fat, bone mass, and skeletal muscle mass
+- 🏋️ **Complete Body Composition**: Syncs weight, body fat, body water, bone mass, and skeletal muscle mass
 - 🔐 **Secure Authentication**: OAuth-based authentication with automatic token refresh for Withings, session-based auth for Garmin
 - 🩺 **Blood Pressure Support**: Optionally include blood pressure readings in your sync
 - ⚡ **Fast & Lightweight**: Built with TypeScript and React for optimal performance
+
+## Installation
+
+### For End Users
+
+Install directly from the [Raycast Store](https://raycast.com/store) by searching for "Withings Sync"
+
+### For Developers
+
+If you want to build or modify this extension locally:
+
+```bash
+npm install
+npm run dev     # Development mode with hot reload
+npm run build   # Build for distribution
+```
 
 ## Setup
 
@@ -23,14 +39,7 @@ Sync your Withings health data (weight, blood pressure, body composition) to Gar
 3. Set the **Redirect URI** to: `https://raycast.com/redirect?packageName=Extension`
 4. Copy your Client ID and Client Secret
 
-### 2. Install and Build
-
-```bash
-npm install
-npm run build
-```
-
-### 3. Configure in Raycast Preferences
+### 2. Configure in Raycast Preferences
 
 1. Open Raycast and press `⌘ + ,` (Command + Comma)
 2. Find "Withings Sync" in the extensions list
@@ -41,8 +50,9 @@ npm run build
    - **Garmin Password**: Your Garmin Connect password
    - **Weight Unit**: Choose pounds (lb) or kilograms (kg) - defaults to pounds
    - **Include Blood Pressure**: Enable/disable blood pressure sync
+   - **Default Lookback Days**: Number of days to fetch measurements for (default: 7)
 
-### 4. Authorize Withings
+### 3. Authorize Withings
 
 1. Open Raycast and search for "Configure Withings & Garmin"
 2. Click "Authorize Withings"
@@ -63,11 +73,15 @@ Browse your recent health measurements from Withings including:
 
 ### Sync to Garmin
 
-Upload your Withings measurements to Garmin Connect:
+Upload your Withings measurements to Garmin Connect with multiple sync options:
 - **Sync Today's Data**: Upload all measurements from today in one action
-- **Sync All Recent**: Batch sync the last 7 measurements
+- **Sync All Recent**: Batch sync the most recent days with data
+- **Smart Sync Since Last Garmin Entry**: Automatically sync only measurements newer than your last Garmin entry (⌘S)
+- **Custom Date Range Sync**: Choose specific start and end dates to sync (up to 90 days)
+- **Check Garmin for Existing Data**: View what's already in Garmin and sync only new measurements (⌘N)
 - **Individual Sync**: Sync specific measurements one at a time
-- Includes weight, body fat, bone mass, muscle mass, and optionally blood pressure
+- **Sync Forward**: Select any measurement and sync it plus all newer ones (⌥Enter)
+- Includes weight, body fat, body water, bone mass, muscle mass, and optionally blood pressure
 
 ### Configure Withings & Garmin
 
@@ -83,6 +97,7 @@ All credentials are configured in Raycast preferences (`⌘ + ,`):
 - **Garmin Password**: Your Garmin Connect password
 - **Weight Unit**: Display weight in pounds (lb) or kilograms (kg) - defaults to pounds
 - **Include Blood Pressure**: Whether to sync blood pressure measurements
+- **Default Lookback Days**: Number of days to fetch measurements for (default: 7)
 
 ## Privacy & Security
 
@@ -106,7 +121,7 @@ Run the "Configure Withings & Garmin" command and click "Authorize Withings"
 ### No measurements showing
 
 - Ensure you have recent measurements in your Withings account
-- The extension shows measurements from the last 7 days by default
+- The extension shows measurements from the last 7 days by default (configurable in preferences)
 
 ## Credits
 

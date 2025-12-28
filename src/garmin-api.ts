@@ -114,6 +114,189 @@ export class GarminAPI {
       );
     }
   }
+
+  async getWeightDataForDateRange(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<DateWeightMap> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      const weightMap: DateWeightMap = {};
+      const currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        try {
+          const weightData = await this.client.getDailyWeightData(currentDate);
+
+          if (
+            weightData &&
+            weightData.dateWeightList &&
+            weightData.dateWeightList.length > 0
+          ) {
+            // Store ALL measurements for this day, not just the latest
+            // This helps detect duplicates
+            const dateKey = currentDate.toISOString().split("T")[0];
+            const measurements = weightData.dateWeightList;
+
+            // Store the most recent measurement for this day
+            const latestMeasurement = measurements[measurements.length - 1];
+
+            weightMap[dateKey] = {
+              weight: latestMeasurement.weight / 1000, // Convert grams to kg
+              timestamp: latestMeasurement.timestampGMT,
+              bodyFat: latestMeasurement.bodyFat ?? undefined,
+              muscleMass: latestMeasurement.muscleMass ?? undefined,
+              // Add count of measurements to detect duplicates
+              count: measurements.length,
+            };
+          }
+        } catch (dayError) {
+          console.log(
+            `No Garmin weight data for ${currentDate.toISOString().split("T")[0]}`,
+          );
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      return weightMap;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch Garmin weight data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  async measurementExistsInGarmin(
+    date: Date,
+    weight: number,
+  ): Promise<boolean> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      const weightData = await this.client.getDailyWeightData(date);
+
+      if (
+        !weightData ||
+        !weightData.dateWeightList ||
+        weightData.dateWeightList.length === 0
+      ) {
+        console.log(
+          `[GARMIN] No data found for ${date.toISOString().split("T")[0]}`,
+        );
+        return false;
+      }
+
+      console.log(
+        `[GARMIN] Found ${weightData.dateWeightList.length} measurements for ${date.toISOString().split("T")[0]}:`,
+        weightData.dateWeightList.map((m: { weight: number }) => (m.weight / 1000).toFixed(2) + "kg"),
+      );
+
+      const TOLERANCE_KG = 0.1;
+      const exists = weightData.dateWeightList.some(
+        (measurement: { weight: number }) =>
+          Math.abs(measurement.weight / 1000 - weight) < TOLERANCE_KG,
+      );
+
+      console.log(
+        `[GARMIN] Checking weight ${weight}kg - Match found: ${exists}`,
+      );
+
+      return exists;
+    } catch (error) {
+      console.error(`[GARMIN] Error checking measurement:`, error);
+      return false;
+    }
+  }
+
+  async getLastGarminEntryDate(): Promise<Date | null> {
+    if (!this.authenticated) {
+      await this.authenticate();
+    }
+
+    try {
+      // Search backwards from today up to 90 days
+      const today = new Date();
+      const ninetyDaysAgo = new Date(
+        today.getTime() - 90 * 24 * 60 * 60 * 1000,
+      );
+
+      const currentDate = new Date(today);
+
+      while (currentDate >= ninetyDaysAgo) {
+        try {
+          const weightData = await this.client.getDailyWeightData(currentDate);
+
+          if (
+            weightData &&
+            weightData.dateWeightList &&
+            weightData.dateWeightList.length > 0
+          ) {
+            // Found the most recent entry - return the date
+            const latestMeasurement =
+              weightData.dateWeightList[weightData.dateWeightList.length - 1];
+            // Parse the calendarDate (format: YYYY-MM-DD)
+            const dateParts = latestMeasurement.calendarDate.split("-");
+            return new Date(
+              parseInt(dateParts[0]),
+              parseInt(dateParts[1]) - 1,
+              parseInt(dateParts[2]),
+            );
+          }
+        } catch (dayError) {
+          // No data for this day, continue searching backwards
+        }
+
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      // No entries found in the last 90 days
+      return null;
+    } catch (error) {
+      throw new Error(
+        `Failed to get last Garmin entry: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+}
+
+// Garmin weight data interfaces
+export interface GarminWeightData {
+  startDate: string;
+  endDate: string;
+  dateWeightList: Array<{
+    samplePk: number;
+    date: number;
+    calendarDate: string;
+    weight: number;
+    bmi: number | null;
+    bodyFat: number | null;
+    bodyWater: number | null;
+    boneMass: number | null;
+    muscleMass: number | null;
+    sourceType: string;
+    timestampGMT: number;
+  }>;
+  totalAverage: {
+    from: number;
+    until: number;
+    weight: number;
+  };
+}
+
+export interface DateWeightMap {
+  [dateString: string]: {
+    weight: number;
+    timestamp: number;
+    bodyFat?: number;
+    muscleMass?: number;
+    count?: number;
+  };
 }
 
 // FIT file creation utilities
