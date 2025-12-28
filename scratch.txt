@@ -1,6 +1,0 @@
-I want to add some more options to this, we'll version this as major update to app, also we'll test all features locally before commititng to git and raycast:
-
-- Look back day setting in the app, currentl I think it pulls 10 days I would like that to be default with option to modify in the raycast settings
-- Custom date input with validation, so user can pick a start date, then all updates since then will be pushed to garmin
-- Auto check for Garmin data for updates only option, here we'll pull from garmin and check aginst the withings data, then offer an option for user to update just the latest settings since the last date there is matchinfg data
-- Option to update anything from a selected entry forward with alt-enter in hit rather than just enter
