@@ -175,6 +175,7 @@ export default function SyncToGarmin() {
         timestamp: measurement.date,
         weight: measurement.weight,
         bodyFat: measurement.fatRatio,
+        bodyWater: measurement.hydration,
         boneMass: measurement.boneMass,
         muscleMass: measurement.muscleMass,
       };
@@ -899,9 +900,35 @@ export default function SyncToGarmin() {
           accessories={
             garminWeightData
               ? (() => {
+                  const badgeDebug: Array<{
+                    date: string;
+                    withingsWeight: number | undefined;
+                    garminWeight: number | undefined;
+                    garminCount: number | undefined;
+                    exists: boolean;
+                    weightDiff: number | null;
+                    isNew: boolean;
+                  }> = [];
+
                   const newCount = measurements.filter((m) => {
                     const dateKey = m.date.toISOString().split("T")[0];
                     const existsInGarmin = garminWeightData[dateKey];
+
+                    const isNew = !existsInGarmin || (m.weight ? Math.abs(m.weight - existsInGarmin.weight) >= 0.1 : false);
+
+                    const debugEntry = {
+                      date: dateKey,
+                      withingsWeight: m.weight,
+                      garminWeight: existsInGarmin?.weight,
+                      garminCount: existsInGarmin?.count,
+                      exists: !!existsInGarmin,
+                      weightDiff: m.weight && existsInGarmin ? Math.abs(m.weight - existsInGarmin.weight) : null,
+                      isNew: isNew
+                    };
+
+                    console.log(`[BADGE] Checking ${dateKey}:`, debugEntry);
+                    badgeDebug.push(debugEntry);
+
                     if (!existsInGarmin) return true;
                     if (m.weight) {
                       return Math.abs(m.weight - existsInGarmin.weight) >= 0.1;
@@ -909,6 +936,17 @@ export default function SyncToGarmin() {
                     return false;
                   }).length;
                   const alreadySynced = measurements.length - newCount;
+
+                  // Write badge calculation to debug file
+                  import("./debug-utils").then(({ writeDebugData }) => {
+                    writeDebugData("badge-calculation", {
+                      timestamp: new Date().toISOString(),
+                      totalMeasurements: measurements.length,
+                      newCount,
+                      alreadySynced,
+                      details: badgeDebug,
+                    }).catch(() => {});
+                  });
 
                   // Count duplicates detected
                   const duplicatesDetected = Object.values(garminWeightData).filter(
@@ -1004,6 +1042,31 @@ function MeasurementItem({
   });
 
   const accessories: List.Item.Accessory[] = [];
+
+  // Check if measurement exists in Garmin (when Garmin data is loaded)
+  if (garminWeightData) {
+    const dateKey = measurement.date.toISOString().split("T")[0];
+    const existsInGarmin = garminWeightData[dateKey];
+    const isNew = !existsInGarmin || (measurement.weight && Math.abs(measurement.weight - existsInGarmin.weight) >= 0.1);
+
+    if (isNew) {
+      accessories.push({
+        tag: {
+          value: "New",
+          color: Color.Orange,
+        },
+        tooltip: "Not synced to Garmin yet",
+      });
+    } else {
+      accessories.push({
+        tag: {
+          value: "Synced",
+          color: Color.Green,
+        },
+        tooltip: "Already in Garmin",
+      });
+    }
+  }
 
   if (measurement.weight) {
     accessories.push({

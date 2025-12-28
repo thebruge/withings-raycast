@@ -49,6 +49,7 @@ export interface WithingsMeasurement {
   heartPulse?: number;
   boneMass?: number;
   muscleMass?: number;
+  hydration?: number;
 }
 
 interface WithingsAPIResponse {
@@ -80,6 +81,7 @@ const MEASUREMENT_TYPES = {
   DIASTOLIC_BP: 9,
   SYSTOLIC_BP: 10,
   HEART_PULSE: 11,
+  HYDRATION: 77,
   BONE_MASS: 88,
   MUSCLE_MASS: 76,
 };
@@ -276,6 +278,9 @@ export async function getMeasurements(
           break;
         case MEASUREMENT_TYPES.HEART_PULSE:
           measurement.heartPulse = value;
+          break;
+        case MEASUREMENT_TYPES.HYDRATION:
+          measurement.hydration = value;
           break;
         case MEASUREMENT_TYPES.BONE_MASS:
           measurement.boneMass = value;
