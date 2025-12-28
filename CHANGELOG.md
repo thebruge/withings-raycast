@@ -27,6 +27,7 @@ Major feature update with enhanced sync capabilities.
 - Enhanced measurement actions with forward sync and duplicate checking
 - Dynamic empty view message based on configured lookback days
 - Duplicate detection warning badge shows when multiple entries exist for same day
+- **Visual Status Badges**: Each measurement shows "New" (orange) or "Synced" (green) status after checking Garmin data
 
 ### Bug Fixes
 
@@ -34,6 +35,8 @@ Major feature update with enhanced sync capabilities.
 - **Auto-refresh After Sync**: Automatically refreshes Garmin data after sync operations to show accurate status
 - **Cache Management**: Properly clears cached Garmin data to ensure fresh checks
 - **Duplicate Count Tracking**: Detects when multiple measurements exist for the same day in Garmin
+- **Unit Conversion Fix**: Fixed critical bug where Garmin weight data was in grams but treated as kilograms, preventing duplicate detection
+- **Body Water Sync**: Added support for syncing body water/hydration percentage to match Python tool functionality
 
 ### Technical Improvements
 

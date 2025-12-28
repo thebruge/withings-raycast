@@ -1010,6 +1010,10 @@ export default function SyncToGarmin() {
             syncResult={syncResults.find(
               (r) => r.measurementDate === measurement.date,
             )}
+            syncSinceLastGarminEntry={syncSinceLastGarminEntry}
+            checkGarminData={checkGarminData}
+            checkLastGarminEntry={checkLastGarminEntry}
+            syncOnlyNew={syncOnlyNew}
           />
         ))}
       </List.Section>
@@ -1023,6 +1027,10 @@ interface MeasurementItemProps {
   onSyncFromSelected: () => void;
   garminWeightData: DateWeightMap | null;
   syncResult?: SyncResult;
+  syncSinceLastGarminEntry: () => void;
+  checkGarminData: () => void;
+  checkLastGarminEntry: () => void;
+  syncOnlyNew: () => void;
 }
 
 function MeasurementItem({
@@ -1031,6 +1039,10 @@ function MeasurementItem({
   onSyncFromSelected,
   garminWeightData,
   syncResult,
+  syncSinceLastGarminEntry,
+  checkGarminData,
+  checkLastGarminEntry,
+  syncOnlyNew,
 }: MeasurementItemProps) {
   const formattedDate = measurement.date.toLocaleDateString("en-US", {
     weekday: "short",
@@ -1099,31 +1111,60 @@ function MeasurementItem({
       accessories={accessories}
       actions={
         <ActionPanel>
-          <Action title="Sync to Garmin" onAction={onSync} icon={Icon.Upload} />
-          <Action
-            title="Sync This + All Newer"
-            onAction={onSyncFromSelected}
-            icon={Icon.ArrowUp}
-            shortcut={{ modifiers: ["opt"], key: "enter" }}
-          />
-          {garminWeightData && (
+          <ActionPanel.Section title="Sync Actions">
+            <Action title="Sync to Garmin" onAction={onSync} icon={Icon.Upload} />
             <Action
-              title="Check If in Garmin"
-              onAction={async () => {
-                const dateKey = measurement.date.toISOString().split("T")[0];
-                const exists = garminWeightData[dateKey];
-                await showToast({
-                  style: exists ? Toast.Style.Success : Toast.Style.Failure,
-                  title: exists ? "Found in Garmin" : "Not in Garmin",
-                  message: exists
-                    ? `Weight: ${exists.weight.toFixed(1)} kg`
-                    : "Not synced",
-                });
-              }}
-              icon={Icon.MagnifyingGlass}
-              shortcut={{ modifiers: ["cmd"], key: "g" }}
+              title="Sync This + All Newer"
+              onAction={onSyncFromSelected}
+              icon={Icon.ArrowUp}
+              shortcut={{ modifiers: ["opt"], key: "enter" }}
             />
-          )}
+            <Action
+              title="Smart Sync Since Last Garmin"
+              onAction={syncSinceLastGarminEntry}
+              icon={Icon.Stars}
+              shortcut={{ modifiers: ["cmd"], key: "s" }}
+            />
+          </ActionPanel.Section>
+          <ActionPanel.Section title="Check Garmin">
+            <Action
+              title="Check Garmin for Existing Data"
+              onAction={checkGarminData}
+              icon={Icon.Download}
+            />
+            <Action
+              title="Check Last Garmin Entry"
+              onAction={checkLastGarminEntry}
+              icon={Icon.Calendar}
+              shortcut={{ modifiers: ["cmd"], key: "l" }}
+            />
+            {garminWeightData && (
+              <>
+                <Action
+                  title="Sync Only New"
+                  onAction={syncOnlyNew}
+                  icon={Icon.PlusCircle}
+                  shortcut={{ modifiers: ["cmd"], key: "n" }}
+                />
+                <Action
+                  title="Check If in Garmin"
+                  onAction={async () => {
+                    const dateKey = measurement.date.toISOString().split("T")[0];
+                    const exists = garminWeightData[dateKey];
+                    await showToast({
+                      style: exists ? Toast.Style.Success : Toast.Style.Failure,
+                      title: exists ? "Found in Garmin" : "Not in Garmin",
+                      message: exists
+                        ? `Weight: ${exists.weight.toFixed(1)} kg`
+                        : "Not synced",
+                    });
+                  }}
+                  icon={Icon.MagnifyingGlass}
+                  shortcut={{ modifiers: ["cmd"], key: "g" }}
+                />
+              </>
+            )}
+          </ActionPanel.Section>
         </ActionPanel>
       }
     />
