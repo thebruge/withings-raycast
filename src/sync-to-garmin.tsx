@@ -29,6 +29,7 @@ interface Preferences {
   garminUsername: string;
   garminPassword: string;
   includeBloodPressure: boolean;
+  weightUnit: "lbs" | "kg";
 }
 
 interface SyncResult {
@@ -1021,6 +1022,7 @@ export default function SyncToGarmin() {
             checkGarminData={checkGarminData}
             checkLastGarminEntry={checkLastGarminEntry}
             syncOnlyNew={syncOnlyNew}
+            weightUnit={prefs.weightUnit}
           />
         ))}
       </List.Section>
@@ -1038,6 +1040,7 @@ interface MeasurementItemProps {
   checkGarminData: () => void;
   checkLastGarminEntry: () => void;
   syncOnlyNew: () => void;
+  weightUnit: "lbs" | "kg";
 }
 
 function MeasurementItem({
@@ -1050,6 +1053,7 @@ function MeasurementItem({
   checkGarminData,
   checkLastGarminEntry,
   syncOnlyNew,
+  weightUnit,
 }: MeasurementItemProps) {
   const formattedDate = measurement.date.toLocaleDateString("en-US", {
     weekday: "short",
@@ -1091,9 +1095,13 @@ function MeasurementItem({
   }
 
   if (measurement.weight) {
+    const displayWeight =
+      weightUnit === "lbs" ? measurement.weight * 2.20462 : measurement.weight;
+    const unit = weightUnit === "lbs" ? "lb" : "kg";
+
     accessories.push({
       tag: {
-        value: `${measurement.weight.toFixed(1)} kg`,
+        value: `${displayWeight.toFixed(1)} ${unit}`,
         color: Color.Blue,
       },
     });

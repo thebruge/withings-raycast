@@ -1,5 +1,11 @@
 # Withings Sync Changelog
 
+## [2.0.1] - 2026-01-02
+
+### Bug Fixes
+
+- **Weight Unit Display**: Fixed bug where weight measurements were always displayed in kg regardless of user preference setting. Weight now correctly displays in pounds (lb) or kilograms (kg) based on the "Weight Unit" preference.
+
 ## [2.0.0] - 2025-12-27
 
 Major feature update with enhanced sync capabilities.
