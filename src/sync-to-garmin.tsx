@@ -339,9 +339,14 @@ export default function SyncToGarmin() {
       const oldestMeasurement = measurements[measurements.length - 1];
       const newestMeasurement = measurements[0];
 
+      // Extend end date to end of day to ensure we capture measurements
+      // that happened later in the day
+      const endDate = new Date(newestMeasurement.date);
+      endDate.setHours(23, 59, 59, 999);
+
       const weightData = await garmin.getWeightDataForDateRange(
         oldestMeasurement.date,
-        newestMeasurement.date,
+        endDate,
       );
 
       console.log(`[CHECK] Garmin weight data fetched:`, {
