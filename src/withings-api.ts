@@ -1,15 +1,4 @@
 import { OAuth, LocalStorage, getPreferenceValues } from "@raycast/api";
-import fetch from "node-fetch";
-
-interface Preferences {
-  withingsClientId: string;
-  withingsClientSecret: string;
-  garminUsername?: string;
-  garminPassword?: string;
-  includeBloodPressure?: boolean;
-  weightUnit?: string;
-  lookbackDays?: string;
-}
 
 // Withings OAuth Configuration
 // Registered at: https://developer.withings.com/dashboard/

@@ -1,6 +1,6 @@
 # Withings Sync Changelog
 
-## [2.0.1] - 2026-01-03
+## [2.0.1] - {PR_MERGE_DATE}
 
 ### Bug Fixes
 

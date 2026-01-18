@@ -25,13 +25,6 @@ import {
 } from "./garmin-api";
 import { logDataComparison, writeDebugData } from "./debug-utils";
 
-interface Preferences {
-  garminUsername: string;
-  garminPassword: string;
-  includeBloodPressure: boolean;
-  weightUnit: "lbs" | "kg";
-}
-
 interface SyncResult {
   success: boolean;
   message: string;
