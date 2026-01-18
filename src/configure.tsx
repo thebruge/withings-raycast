@@ -11,12 +11,6 @@ import { useState, useEffect } from "react";
 import { isAuthenticated, authorize, logout } from "./withings-api";
 import { clearGarminSession } from "./garmin-api";
 
-interface Preferences {
-  garminUsername: string;
-  garminPassword: string;
-  includeBloodPressure: boolean;
-}
-
 export default function Configure() {
   const [withingsAuth, setWithingsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

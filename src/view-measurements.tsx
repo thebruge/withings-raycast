@@ -16,11 +16,6 @@ import {
   authorize,
 } from "./withings-api";
 
-interface Preferences {
-  weightUnit?: string;
-  lookbackDays?: string;
-}
-
 export default function ViewMeasurements() {
   const [measurements, setMeasurements] = useState<WithingsMeasurement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
