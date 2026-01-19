@@ -46,14 +46,37 @@ npm run publish
 
 The extension is published via PRs to `raycast/extensions`. The user's fork is `thebruge/raycast-extensions` with branch `ext/withings-sync`.
 
+### Validating Before Push
+
+**IMPORTANT**: Always validate code meets Raycast requirements before pushing:
+
+```bash
+# Validate all Raycast requirements (package.json, icons, metadata, ESLint, Prettier)
+npx ray lint
+
+# Auto-fix formatting issues
+npx ray lint --fix
+
+# Also run build to catch TypeScript errors
+npm run build
+```
+
+The `npx ray lint` command runs the same validations as `npm run publish` without creating a PR. Always run this before committing.
+
 ### Before updating the PR branch:
 
-1. **Always check for open PRs first:**
+1. **Validate locally first:**
+   ```bash
+   npx ray lint --fix
+   npm run build
+   ```
+
+2. **Check for open PRs:**
    ```bash
    gh pr list --repo raycast/extensions --author thebruge --state open
    ```
 
-2. **If a PR exists**, update it by pushing normally (not force push) to the existing branch:
+3. **If a PR exists**, update it by pushing normally (not force push) to the existing branch:
    ```bash
    cd /Users/rgallagher/Documents/GitHub/raycast-extensions
    git checkout ext/withings-sync
@@ -62,16 +85,17 @@ The extension is published via PRs to `raycast/extensions`. The user's fork is `
    cp /Users/rgallagher/Documents/GitHub/withings-raycast/package.json extensions/withings-sync/
    cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.ts extensions/withings-sync/src/
    cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.tsx extensions/withings-sync/src/
+   cp /Users/rgallagher/Documents/GitHub/withings-raycast/README.md extensions/withings-sync/
    git add extensions/withings-sync/
    git commit -m "Description of changes"
-   git push origin ext/withings-sync
+   GIT_LFS_SKIP_PUSH=1 git push origin ext/withings-sync
    ```
 
-3. **NEVER force push** to a branch with an open PR - this will close the PR.
+4. **NEVER force push** to a branch with an open PR - this will close the PR.
 
-4. **NEVER disable git hooks** (`git config core.hooksPath /dev/null`) when pushing to PR branches.
+5. **NEVER disable git hooks** (`git config core.hooksPath /dev/null`) when pushing to PR branches.
 
-5. **If using `npm run publish`**: Only use this when there is NO open PR. The Raycast CLI manages its own PR lifecycle and will create a new PR, potentially conflicting with existing ones.
+6. **If using `npm run publish`**: Only use this when there is NO open PR. The Raycast CLI manages its own PR lifecycle and will create a new PR, potentially conflicting with existing ones.
 
 ### Related repositories:
 - **Development repo**: `/Users/rgallagher/Documents/GitHub/withings-raycast` (this repo)
