@@ -40,6 +40,44 @@ npm run fix-lint
 npm run publish
 ```
 
+## Publishing to Raycast Store
+
+**CRITICAL: Check for open PRs before making changes to the raycast-extensions fork**
+
+The extension is published via PRs to `raycast/extensions`. The user's fork is `thebruge/raycast-extensions` with branch `ext/withings-sync`.
+
+### Before updating the PR branch:
+
+1. **Always check for open PRs first:**
+   ```bash
+   gh pr list --repo raycast/extensions --author thebruge --state open
+   ```
+
+2. **If a PR exists**, update it by pushing normally (not force push) to the existing branch:
+   ```bash
+   cd /Users/rgallagher/Documents/GitHub/raycast-extensions
+   git checkout ext/withings-sync
+   git pull origin ext/withings-sync
+   # Copy updated files from withings-raycast
+   cp /Users/rgallagher/Documents/GitHub/withings-raycast/package.json extensions/withings-sync/
+   cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.ts extensions/withings-sync/src/
+   cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.tsx extensions/withings-sync/src/
+   git add extensions/withings-sync/
+   git commit -m "Description of changes"
+   git push origin ext/withings-sync
+   ```
+
+3. **NEVER force push** to a branch with an open PR - this will close the PR.
+
+4. **NEVER disable git hooks** (`git config core.hooksPath /dev/null`) when pushing to PR branches.
+
+5. **If using `npm run publish`**: Only use this when there is NO open PR. The Raycast CLI manages its own PR lifecycle and will create a new PR, potentially conflicting with existing ones.
+
+### Related repositories:
+- **Development repo**: `/Users/rgallagher/Documents/GitHub/withings-raycast` (this repo)
+- **Fork for PRs**: `/Users/rgallagher/Documents/GitHub/raycast-extensions`
+- **Upstream**: `raycast/extensions`
+
 ### Testing in Raycast
 - Use `npm run dev` to run in development mode
 - The extension will appear in Raycast immediately
@@ -154,13 +192,11 @@ Key dependencies:
 - `@raycast/utils`: Helper utilities for common patterns
 - `garmin-connect`: Garmin Connect authentication and upload (Node.js garth equivalent)
 - `@markw65/fit-file-writer`: FIT file generation for Garmin
-- `node-fetch`: HTTP requests (v2 for CommonJS compatibility)
 - TypeScript 5.4.5 with strict mode enabled
 
 Dev dependencies:
 - `@types/react@19.0.10`: React 19 types (required by Raycast)
 - `@types/node@22.13.10`: Node.js types (required by Raycast)
-- `@types/node-fetch`: Type definitions for node-fetch
 
 ## Common Development Patterns
 
@@ -196,3 +232,77 @@ if (measurement.weight) {
   // Use measurement.weight
 }
 ```
+
+## Raycast Store PR Requirements
+
+When submitting PRs to the Raycast extensions store:
+
+### PR Description Template
+PRs need a full description with these sections:
+- **Description**: What the extension does, how it works, user features
+- **Screencast**: Video/screenshots (speeds up review)
+- **Checklist**: Confirming guidelines were followed
+
+Use `gh pr edit <number> --repo raycast/extensions --body "..."` to update PR descriptions.
+
+### PR State
+- PRs must NOT be in draft state to be reviewed
+- Check PR state: `gh pr view <number> --repo raycast/extensions --json isDraft,state`
+
+### Common Review Feedback
+Issues that reviewers commonly flag:
+
+1. **Unnecessary dependencies**: Don't include `node-fetch` - Node 21+ has built-in fetch
+2. **Manual type definitions**: Don't define `interface Preferences {}` manually - Raycast auto-generates this from package.json preferences
+3. **Future-dated changelog**: Dates in CHANGELOG.md should not be in the future
+
+## LaunchAgent Configuration
+
+The extension runs in dev mode via a LaunchAgent for persistent availability.
+
+**Plist location**: `/Users/rgallagher/Library/LaunchAgents/com.user.withings-raycast-dev.plist`
+
+**Key settings**:
+- Working directory: `/Users/rgallagher/Documents/GitHub/withings-raycast`
+- npm path: `/opt/homebrew/bin/npm` (Homebrew on Apple Silicon)
+- PATH must include `/opt/homebrew/bin` for Homebrew tools
+
+**Managing the service**:
+```bash
+# Check status
+launchctl list | grep withings
+
+# View logs
+cat /tmp/withings-raycast-dev.log
+cat /tmp/withings-raycast-dev-error.log
+
+# Reload after changes
+launchctl unload ~/Library/LaunchAgents/com.user.withings-raycast-dev.plist
+launchctl load ~/Library/LaunchAgents/com.user.withings-raycast-dev.plist
+```
+
+**If the extension stops working after moving the repo**, update the WorkingDirectory in the plist file.
+
+## Git LFS Issues
+
+The `raycast-extensions` repo uses Git LFS. If you see LFS errors when pushing:
+
+1. **DO NOT** disable hooks with `git config core.hooksPath /dev/null` - this can cause force pushes that close PRs
+2. Instead, install git-lfs: `brew install git-lfs`
+3. Or use `GIT_LFS_SKIP_PUSH=1` environment variable (safer)
+
+## Troubleshooting
+
+### Extension not appearing in Raycast
+1. Run `npm run dev` from the extension directory
+2. Check that the LaunchAgent is running: `launchctl list | grep withings`
+3. Check logs: `cat /tmp/withings-raycast-dev.log`
+
+### npm path issues in LaunchAgent
+On Apple Silicon Macs, npm is at `/opt/homebrew/bin/npm`, not `/usr/local/bin/npm`. Update the plist if needed.
+
+### PR accidentally closed
+If a PR gets closed due to force push or branch issues:
+1. The code is still in the branch - create a new PR from the same branch
+2. Copy the description from the old PR
+3. Update PR description with `gh pr edit`
