@@ -76,20 +76,7 @@ The `npx ray lint` command runs the same validations as `npm run publish` withou
    gh pr list --repo raycast/extensions --author thebruge --state open
    ```
 
-3. **If a PR exists**, update it by pushing normally (not force push) to the existing branch:
-   ```bash
-   cd /Users/rgallagher/Documents/GitHub/raycast-extensions
-   git checkout ext/withings-sync
-   git pull origin ext/withings-sync
-   # Copy updated files from withings-raycast
-   cp /Users/rgallagher/Documents/GitHub/withings-raycast/package.json extensions/withings-sync/
-   cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.ts extensions/withings-sync/src/
-   cp /Users/rgallagher/Documents/GitHub/withings-raycast/src/*.tsx extensions/withings-sync/src/
-   cp /Users/rgallagher/Documents/GitHub/withings-raycast/README.md extensions/withings-sync/
-   git add extensions/withings-sync/
-   git commit -m "Description of changes"
-   GIT_LFS_SKIP_PUSH=1 git push origin ext/withings-sync
-   ```
+3. **If a PR exists**, update it by pushing normally (not force push) to the existing branch.
 
 4. **NEVER force push** to a branch with an open PR - this will close the PR.
 
@@ -97,9 +84,46 @@ The `npx ray lint` command runs the same validations as `npm run publish` withou
 
 6. **If using `npm run publish`**: Only use this when there is NO open PR. The Raycast CLI manages its own PR lifecycle and will create a new PR, potentially conflicting with existing ones.
 
+### Updating the fork without a local clone
+
+The `raycast-extensions` fork is **not cloned locally** (the repo is too large). Use the GitHub MCP tools to update files directly via the API:
+
+1. Get the current file SHA from the fork:
+
+   ```text
+   mcp__plugin_github_github__get_file_contents(owner="thebruge", repo="raycast-extensions",
+     path="extensions/withings-sync/src/<file>", ref="refs/heads/ext/withings-sync")
+   ```
+
+2. Push the updated file (SHA is required for existing files):
+
+   ```text
+   mcp__plugin_github_github__create_or_update_file(owner="thebruge", repo="raycast-extensions",
+     path="extensions/withings-sync/src/<file>", branch="ext/withings-sync",
+     sha="<sha from step 1>", content="<file contents>", message="<commit message>")
+   ```
+
+3. If there is no open PR, create one:
+
+   ```text
+   mcp__plugin_github_github__create_pull_request(owner="raycast", repo="extensions",
+     title="...", head="thebruge:ext/withings-sync", base="main", body="...")
+   ```
+
+Files that typically need updating when src changes:
+
+- `extensions/withings-sync/src/sync-to-garmin.tsx`
+- `extensions/withings-sync/src/withings-api.ts`
+- `extensions/withings-sync/src/garmin-api.ts`
+- `extensions/withings-sync/src/configure.tsx`
+- `extensions/withings-sync/src/view-measurements.tsx`
+- `extensions/withings-sync/package.json` (if dependencies or metadata changed)
+- `extensions/withings-sync/README.md` (if README changed)
+
 ### Related repositories:
-- **Development repo**: `/Users/rgallagher/Documents/GitHub/withings-raycast` (this repo)
-- **Fork for PRs**: `/Users/rgallagher/Documents/GitHub/raycast-extensions`
+
+- **Development repo**: `/Users/richardgallagher/Documents/GitHub/withings-raycast` (this repo)
+- **Fork for PRs**: `thebruge/raycast-extensions` on GitHub (not cloned locally — use GitHub MCP)
 - **Upstream**: `raycast/extensions`
 
 ### Testing in Raycast
