@@ -128,7 +128,9 @@ async function fetchTokens(authCode: string): Promise<WithingsTokens> {
   };
 
   if (data.status !== 0) {
-    throw new Error(`Failed to fetch tokens from Withings (status: ${data.status})`);
+    throw new Error(
+      `Failed to fetch tokens from Withings (status: ${data.status})`,
+    );
   }
 
   return {
