@@ -22,3 +22,4 @@ npm-debug.log*
 scratch.txt
 *.scratch
 temp.*
+.claude/settings.local.json
