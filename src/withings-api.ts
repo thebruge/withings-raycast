@@ -6,11 +6,16 @@ import { OAuth, LocalStorage, getPreferenceValues } from "@raycast/api";
 //
 // IMPORTANT: Users must register their own Withings OAuth app and configure in preferences
 // See README.md for setup instructions
-const preferences = getPreferenceValues<Preferences>();
-const WITHINGS_CLIENT_ID = preferences.withingsClientId;
-const WITHINGS_CLIENT_SECRET = preferences.withingsClientSecret;
 const WITHINGS_REDIRECT_URI =
   "https://raycast.com/redirect?packageName=Extension";
+
+function getCredentials() {
+  const prefs = getPreferenceValues<Preferences>();
+  return {
+    clientId: prefs.withingsClientId,
+    clientSecret: prefs.withingsClientSecret,
+  };
+}
 
 export const withingsOAuthClient = new OAuth.PKCEClient({
   redirectMethod: OAuth.RedirectMethod.Web,
@@ -76,9 +81,10 @@ const MEASUREMENT_TYPES = {
 };
 
 export async function authorize(): Promise<void> {
+  const { clientId } = getCredentials();
   const authRequest = await withingsOAuthClient.authorizationRequest({
     endpoint: "https://account.withings.com/oauth2_user/authorize2",
-    clientId: WITHINGS_CLIENT_ID,
+    clientId: clientId,
     scope: "user.metrics",
     extraParameters: {
       response_type: "code",
@@ -93,11 +99,12 @@ export async function authorize(): Promise<void> {
 }
 
 async function fetchTokens(authCode: string): Promise<WithingsTokens> {
+  const { clientId, clientSecret } = getCredentials();
   const params = new URLSearchParams({
     action: "requesttoken",
     grant_type: "authorization_code",
-    client_id: WITHINGS_CLIENT_ID,
-    client_secret: WITHINGS_CLIENT_SECRET,
+    client_id: clientId,
+    client_secret: clientSecret,
     code: authCode,
     redirect_uri: WITHINGS_REDIRECT_URI,
   });
@@ -121,7 +128,7 @@ async function fetchTokens(authCode: string): Promise<WithingsTokens> {
   };
 
   if (data.status !== 0) {
-    throw new Error("Failed to fetch tokens from Withings");
+    throw new Error(`Failed to fetch tokens from Withings (status: ${data.status})`);
   }
 
   return {
@@ -133,11 +140,12 @@ async function fetchTokens(authCode: string): Promise<WithingsTokens> {
 }
 
 async function refreshTokens(refreshToken: string): Promise<WithingsTokens> {
+  const { clientId, clientSecret } = getCredentials();
   const params = new URLSearchParams({
     action: "requesttoken",
     grant_type: "refresh_token",
-    client_id: WITHINGS_CLIENT_ID,
-    client_secret: WITHINGS_CLIENT_SECRET,
+    client_id: clientId,
+    client_secret: clientSecret,
     refresh_token: refreshToken,
   });
 
@@ -160,7 +168,7 @@ async function refreshTokens(refreshToken: string): Promise<WithingsTokens> {
   };
 
   if (data.status !== 0) {
-    throw new Error("Failed to refresh tokens");
+    throw new Error(`Failed to refresh tokens (status: ${data.status})`);
   }
 
   return {
@@ -182,13 +190,17 @@ export async function getValidTokens(): Promise<WithingsTokens | null> {
   }
 
   const tokens: WithingsTokens = JSON.parse(tokensString);
-
   // Check if tokens are expired
   if (Date.now() >= tokens.expires_at - 300000) {
-    // Refresh 5 minutes before expiry
-    const newTokens = await refreshTokens(tokens.refresh_token);
-    await storeTokens(newTokens);
-    return newTokens;
+    try {
+      const newTokens = await refreshTokens(tokens.refresh_token);
+      await storeTokens(newTokens);
+      return newTokens;
+    } catch {
+      // Refresh token is invalid - clear stored tokens so user can re-auth cleanly
+      await LocalStorage.removeItem("withings_tokens");
+      return null;
+    }
   }
 
   return tokens;
