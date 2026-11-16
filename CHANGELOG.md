@@ -1,6 +1,10 @@
 # Withings Sync Changelog
 
-## [Enhanced Sync Features] - {PR_MERGE_DATE}
+## [Bug Fix] - 2026-05-26
+
+- Fixed crash on launch of Sync to Garmin command (TypeError: Cannot read properties of null (reading 'useState'))
+
+## [Initial Version] - 2026-02-05
 
 - Added configurable lookback days preference (default: 7 days)
 - Added Smart Sync to automatically find last Garmin entry and sync only newer measurements
@@ -12,9 +16,6 @@
 - Fixed duplicate upload prevention
 - Fixed unit conversion bug where Garmin weight was in grams but treated as kilograms
 - Added body water/hydration sync support
-
-## [Initial Version] - 2026-01-18
-
 - View Withings measurements (weight, blood pressure, heart rate, body composition)
 - Sync measurements to Garmin Connect
 - Quick "Sync Today's Data" action to upload all measurements from today

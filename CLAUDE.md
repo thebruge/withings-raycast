@@ -122,9 +122,16 @@ Files that typically need updating when src changes:
 
 ### Related repositories:
 
-- **Development repo**: `/Users/richardgallagher/Documents/GitHub/withings-raycast` (this repo)
+- **Development repo**: `~/Developer/personal/withings-raycast` (this repo, `thebruge/withings-raycast`)
 - **Fork for PRs**: `thebruge/raycast-extensions` on GitHub (not cloned locally — use GitHub MCP)
 - **Upstream**: `raycast/extensions`
+
+### Changelog and versions
+
+- `CHANGELOG.md` uses the Raycast store format, which the store requires: `## [Title] - {PR_MERGE_DATE}`, newest first, no version numbers. Raycast replaces `{PR_MERGE_DATE}` with the merge date; once a store PR merges, copy the published `extensions/withings-sync/CHANGELOG.md` back here so the two match.
+- Each store release also gets a SemVer version in `package.json` and a `vX.Y.Z` tag in this repo (major: a breaking change to commands or preferences; minor: new features; patch: fixes). Commit it as `chore(release): vX.Y.Z`. The store ignores the version field.
+- Commits use Conventional Commits (`feat:`, `fix:`, `docs:`, `style:`, `chore:`).
+- The store copy's `package.json` has newer dependency versions (bumped by Raycast's maintainers) and `"platforms": ["macOS"]`. Pull those in here before the next store PR so it doesn't downgrade them.
 
 ### Testing in Raycast
 - Use `npm run dev` to run in development mode
