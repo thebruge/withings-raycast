@@ -311,32 +311,11 @@ Issues that reviewers commonly flag:
 2. **Manual type definitions**: Don't define `interface Preferences {}` manually - Raycast auto-generates this from package.json preferences
 3. **Future-dated changelog**: Dates in CHANGELOG.md should not be in the future
 
-## LaunchAgent Configuration
+## Running it on this Mac
 
-The extension runs in dev mode via a LaunchAgent for persistent availability.
-
-**Plist location**: `/Users/rgallagher/Library/LaunchAgents/com.user.withings-raycast-dev.plist`
-
-**Key settings**:
-- Working directory: `/Users/rgallagher/Documents/GitHub/withings-raycast`
-- npm path: `/opt/homebrew/bin/npm` (Homebrew on Apple Silicon)
-- PATH must include `/opt/homebrew/bin` for Homebrew tools
-
-**Managing the service**:
-```bash
-# Check status
-launchctl list | grep withings
-
-# View logs
-cat /tmp/withings-raycast-dev.log
-cat /tmp/withings-raycast-dev-error.log
-
-# Reload after changes
-launchctl unload ~/Library/LaunchAgents/com.user.withings-raycast-dev.plist
-launchctl load ~/Library/LaunchAgents/com.user.withings-raycast-dev.plist
-```
-
-**If the extension stops working after moving the repo**, update the WorkingDirectory in the plist file.
+- Day to day, Raycast runs the **Store** version of Withings Sync (installed under `~/.config/raycast/extensions/`), not this repo.
+- To try changes from this repo, run `npm run dev`. The dev version shows up in Raycast while that command runs and goes away when it stops.
+- An earlier Mac kept the dev version running all the time with a LaunchAgent (`com.user.withings-raycast-dev`). It isn't installed on this Mac (checked 2026-11-15) and isn't needed now that the extension is in the Store. Don't recreate it unless I ask.
 
 ## Git LFS Issues
 
@@ -348,13 +327,10 @@ The `raycast-extensions` repo uses Git LFS. If you see LFS errors when pushing:
 
 ## Troubleshooting
 
-### Extension not appearing in Raycast
-1. Run `npm run dev` from the extension directory
-2. Check that the LaunchAgent is running: `launchctl list | grep withings`
-3. Check logs: `cat /tmp/withings-raycast-dev.log`
-
-### npm path issues in LaunchAgent
-On Apple Silicon Macs, npm is at `/opt/homebrew/bin/npm`, not `/usr/local/bin/npm`. Update the plist if needed.
+### Dev version not appearing in Raycast
+1. Run `npm run dev` from this repo and keep it running; the dev version only exists while it does
+2. Check its output for build errors (it rebuilds on every save)
+3. Open the Raycast developer console (⌘ + ⇧ + D in dev mode) for runtime errors
 
 ### PR accidentally closed
 If a PR gets closed due to force push or branch issues:
